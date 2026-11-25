@@ -18,6 +18,3 @@ coverage/
 *.tsbuildinfo
 playwright-report/
 test-results/
-
-# Local plan execution state
-/.superpowers/
