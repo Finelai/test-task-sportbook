@@ -13,6 +13,7 @@ import (
 )
 
 var ErrConflict = errors.New("idempotency conflict")
+var ErrNotFound = errors.New("bet not found")
 
 type Bet struct {
 	ID, Status, Reason string
@@ -20,6 +21,7 @@ type Bet struct {
 }
 type Store interface {
 	Ping(context.Context) error
+	Get(context.Context, string) (Bet, error)
 	Submit(context.Context, string, string, int64, int64) (Bet, error)
 }
 
@@ -34,6 +36,27 @@ func New(store Store) http.Handler {
 			return
 		}
 		w.WriteHeader(200)
+	})
+	mux.HandleFunc("GET /api/v1/bets/{betId}", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		bet, err := store.Get(ctx, r.PathValue("betId"))
+		w.Header().Set("Content-Type", "application/json")
+		if errors.Is(err, ErrNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(map[string]string{"code": "not_found", "message": "Bet not found"})
+			return
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_ = json.NewEncoder(w).Encode(map[string]string{"code": "unavailable", "message": "Service is temporarily unavailable"})
+			return
+		}
+		response := map[string]string{"betId": bet.ID, "status": bet.Status, "amount": fmt.Sprintf("%d.%02d", bet.Amount/100, bet.Amount%100), "odds": fmt.Sprintf("%d.%02d", bet.Odds/100, bet.Odds%100)}
+		if bet.Status == "rejected" {
+			response["reason"] = bet.Reason
+		}
+		_ = json.NewEncoder(w).Encode(response)
 	})
 	mux.HandleFunc("POST /api/v1/bets", func(w http.ResponseWriter, r *http.Request) {
 		fail := func(status int, code, message string) {

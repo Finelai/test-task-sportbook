@@ -9,7 +9,8 @@ import (
 
 type testStore struct{ calls int }
 
-func (s *testStore) Ping(context.Context) error { return nil }
+func (s *testStore) Get(context.Context, string) (Bet, error) { return Bet{}, ErrNotFound }
+func (s *testStore) Ping(context.Context) error               { return nil }
 func (s *testStore) Submit(_ context.Context, key, offer string, amount, odds int64) (Bet, error) {
 	s.calls++
 	return Bet{ID: "bet-1", Status: "pending", Amount: amount, Odds: odds}, nil

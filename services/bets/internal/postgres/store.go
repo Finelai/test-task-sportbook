@@ -79,3 +79,12 @@ func (s *Store) Retry(ctx context.Context, j *app.Job, delay time.Duration) (boo
 	result, err := s.pool.Exec(ctx, `UPDATE bets SET attempts=attempts+1,next_attempt_at=now()+$3*interval '1 microsecond',lease_token=NULL,lease_until=NULL WHERE id=$1 AND lease_token=$2 AND lease_until>now() AND status='pending'`, j.ID, j.Token, delay.Microseconds())
 	return result.RowsAffected() == 1, err
 }
+
+func (s *Store) Get(ctx context.Context, id string) (httpapi.Bet, error) {
+	var bet httpapi.Bet
+	err := s.pool.QueryRow(ctx, `SELECT id,status,reason,amount,odds FROM bets WHERE id=$1 AND player_id='player-1'`, id).Scan(&bet.ID, &bet.Status, &bet.Reason, &bet.Amount, &bet.Odds)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return httpapi.Bet{}, httpapi.ErrNotFound
+	}
+	return bet, err
+}
