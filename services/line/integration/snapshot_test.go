@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -94,6 +95,63 @@ func TestSnapshot(t *testing.T) {
 		case <-time.After(time.Second):
 			t.Fatal("missing persisted update")
 		}
+	}
+
+	// Separate service instances share the PostgreSQL lock during issue and repricing.
+	second := app.New(store)
+	issued := make(chan app.Offer, 20)
+	failures := make(chan error, 21)
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			offer, e := second.IssueOffer(ctx, "player-1", "match-1", "HOME", time.Now())
+			if e != nil {
+				failures <- e
+				return
+			}
+			issued <- offer
+		}()
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-start
+		if e := service.Generate(ctx, 0, time.Now(), 31); e != nil {
+			failures <- e
+		}
+	}()
+	close(start)
+	wg.Wait()
+	close(issued)
+	close(failures)
+	for e := range failures {
+		t.Fatal(e)
+	}
+	var first app.Offer
+	count := 0
+	for offer := range issued {
+		count++
+		if first.ID == "" {
+			first = offer
+		}
+		if offer.ID != first.ID {
+			t.Fatalf("concurrent issue returned multiple offers: %+v and %+v", first, offer)
+		}
+	}
+	if count != 20 {
+		t.Fatalf("got %d offers", count)
+	}
+	state, err := store.Read(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	current := state.Published[0].Odds[0]
+	if first.OddsHundredths-current > 100 || current-first.OddsHundredths > 100 {
+		t.Fatalf("offer price %d disagrees with current %d", first.OddsHundredths, current)
 	}
 	store.Close()
 	r = request("/api/v1/line")
