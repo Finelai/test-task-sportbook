@@ -109,6 +109,8 @@
 
 ## Задача 4. Кошелёк и события резерва
 
+**Статус:** реализована; изменения сохранены коммитами до `12f8534`.
+
 **Детальный план:** [этапы реализации и ручные проверки](2026-11-25-task-4-wallet.md).
 
 **Файлы:** `services/wallet/internal/domain/wallet.go`, `services/wallet/internal/app/operations.go`, `services/wallet/internal/httpapi/wallet.go`, `services/wallet/internal/rpc/reserves.go`, `services/wallet/migrations/001_wallet.sql`, `services/wallet/queries/wallet.sql`, `services/wallet/integration/wallet_test.go`.
@@ -123,6 +125,8 @@
 - [ ] Создать коммит `feat: implement wallet credits and reservations`.
 
 ## Задача 5. Приём ставки и восстановление
+
+**Детальный план:** [этапы реализации и ручные проверки](2026-11-25-task-5-bets.md). Общая ветка задачи — `feat/bets-implementation`.
 
 **Файлы:** `services/bets/internal/domain/bet.go`, `services/bets/internal/app/{submit.go,worker.go}`, `services/bets/internal/httpapi/bets.go`, `services/bets/internal/rpc/clients.go`, `services/bets/migrations/001_bets.sql`, `services/bets/queries/bets.sql`, `services/bets/integration/process_test.go`.
 
