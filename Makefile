@@ -22,7 +22,8 @@ lint-web:
 	npm --prefix apps/web run format:check
 
 generate:
-	@echo 'Contract generation will be added in task 2.'
+	npm --prefix apps/web exec -- openapi-typescript contracts/openapi/v1.yaml -o apps/web/src/shared/api/generated/openapi.ts
+	npm --prefix apps/web exec -- prettier --write apps/web/src/shared/api/generated/openapi.ts
 
 test:
 	go test ./...

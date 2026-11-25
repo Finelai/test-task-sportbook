@@ -24,6 +24,8 @@ jobs:
       - run: docker compose config -q
       - run: make lint
       - run: make generate
+      - run: git diff --exit-code -- apps/web/src/shared/api/generated/
+      - run: docker compose --profile contract-check config -q
       - run: make test
       - run: make test-integration
       - run: npm --prefix apps/web run build

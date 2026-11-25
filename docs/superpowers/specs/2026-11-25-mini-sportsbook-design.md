@@ -83,14 +83,14 @@ Go использует `net/http`, `pgx`, `sqlc` и миграции Goose. К�
 
 | Этап | Проверяемый результат | Скиллы |
 |---|---|---|
-| 1. Каркас | Монорепозиторий, Compose, правила импортов, форматирование, строгие проверки типов и CI | `writing-plans` после согласования ТЗ, затем `executing-plans` или `subagent-driven-development` по выбранному режиму |
+| 1. Каркас | Монорепозиторий, Compose, правила импортов, форматирование, строгие проверки типов и CI | `writing-plans` после согласования ТЗ |
 | 2. Линия | Генераторы, расчёт, SSE и серверное подтверждение предложения | `test-driven-development`, `verification-before-completion` |
 | 3. Кошелёк | Пополнение, резерв, списание и освобождение с тестами PostgreSQL | `test-driven-development`, `verification-before-completion` |
 | 4. Ставки | gRPC-интеграция, восстановление процесса и Swagger UI для публичного API | `test-driven-development`, `requesting-code-review`, `verification-before-completion` |
 | 5. SPA | Линия, форма ставки, пополнение и статусы с проверкой Playwright | `test-driven-development`, `verification-before-completion` |
 | 6. Наблюдаемость и сдача | Метрики, отчёт сборки, дашборды, интеграционный прогон и README | `requesting-code-review`, `verification-before-completion` |
 
-Все скиллы в таблице имеют префикс `superpowers:`. Для подготовки ТЗ использованы `using-superpowers` и `brainstorming`. При сбое применяется `systematic-debugging`, при обработке замечаний — `receiving-code-review`. Линия и Кошелёк могут разрабатываться параллельно после фиксации контрактов, если выбран параллельный режим. Тогда применяется `dispatching-parallel-agents`. При работе в отдельном checkout применяется `using-git-worktrees`. После успешных проверок `finishing-a-development-branch` применяется, если потребуется интеграция ветки.
+Все скиллы в таблице имеют префикс `superpowers:`. Для подготовки ТЗ использованы `using-superpowers` и `brainstorming`. При сбое применяется `systematic-debugging`, при обработке замечаний — `receiving-code-review`. Линия и Кошелёк могут разрабатываться параллельно после фиксации контрактов, если выбран параллельный режим. Тогда применяется `dispatching-parallel-agents`. Работа ведётся в отдельных ветках основного checkout, без worktree. После успешных проверок `finishing-a-development-branch` применяется, если потребуется интеграция ветки.
 
 ## Решения, предложенные для первой версии
 

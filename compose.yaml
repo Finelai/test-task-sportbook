@@ -20,5 +20,29 @@ services:
       timeout: 3s
       retries: 12
 
+  contract-check:
+    profiles: [contract-check]
+    build:
+      context: .
+      dockerfile: tools/contract-check/Dockerfile
+
+  swagger-ui:
+    profiles: [contract-check]
+    image: swaggerapi/swagger-ui:v5.30.3
+    environment:
+      SWAGGER_JSON_URL: /docs/openapi.yaml
+
+  nginx:
+    profiles: [contract-check]
+    image: nginx:1.29.4-alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./contracts/openapi/v1.yaml:/etc/nginx/contracts/v1.yaml:ro
+    depends_on:
+      - contract-check
+      - swagger-ui
+
 volumes:
   postgres_data:

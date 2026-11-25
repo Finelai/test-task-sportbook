@@ -1,6 +1,6 @@
 # Mini Sportsbook Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Для исполнителя:** выполнять план по задачам. Для отслеживания использовать флажки (`- [ ]`).
 
 **Goal:** Запустить мини-спортсбук, где один игрок пополняет условный баланс, видит обновления линии и ставит по зафиксированной цене.
 
@@ -42,9 +42,9 @@
 
 ## Порядок применения Superpowers
 
-`superpowers:using-superpowers` и `superpowers:brainstorming` применены при подготовке ТЗ, `superpowers:writing-plans` — при составлении этого плана. Режим исполнения задаёт `superpowers:executing-plans` или `superpowers:subagent-driven-development`. Перед поведением применить `superpowers:test-driven-development`, перед заявлением результата и коммитом — `superpowers:verification-before-completion`. После задач 5 и 8 провести проверку по `superpowers:requesting-code-review`. При сбое использовать `superpowers:systematic-debugging`, при работе с замечаниями — `superpowers:receiving-code-review`.
+`superpowers:using-superpowers` и `superpowers:brainstorming` применены при подготовке ТЗ, `superpowers:writing-plans` — при составлении этого плана. Перед поведением применить `superpowers:test-driven-development`, перед заявлением результата и коммитом — `superpowers:verification-before-completion`. После задач 5 и 8 провести проверку по `superpowers:requesting-code-review`. При сбое использовать `superpowers:systematic-debugging`, при работе с замечаниями — `superpowers:receiving-code-review`.
 
-Задачи 3 и 4 независимы после задачи 2. При выборе параллельного режима к ним применим `superpowers:dispatching-parallel-agents`. Если для работы нужна изоляция, применить `superpowers:using-git-worktrees`. При интеграции готовой ветки применить `superpowers:finishing-a-development-branch`.
+Задачи 3 и 4 независимы после задачи 2. При выборе параллельного режима к ним применим `superpowers:dispatching-parallel-agents`. Работать в отдельных ветках основного checkout, без worktree. При интеграции готовой ветки применить `superpowers:finishing-a-development-branch`.
 
 ## Задача 1. Каркас и проверки
 

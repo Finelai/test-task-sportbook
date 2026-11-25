@@ -1,0 +1,71 @@
+openapi: 3.0.3
+info:
+  title: Mini Sportsbook API
+  version: 1.0.0
+  description: Публичный контракт мини-спортсбука.
+paths:
+  /api/v1/line:
+    get:
+      summary: Получить снимок линии
+      operationId: getLine
+      responses:
+        '200':
+          description: Снимок линии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LineSnapshot'
+              example:
+                version: 1
+                matches:
+                  - matchId: match-1
+                    homeTeam: Home FC
+                    awayTeam: Away FC
+                    open: true
+                    quotes:
+                      - {outcome: HOME, odds: '2.10'}
+                      - {outcome: DRAW, odds: '3.20'}
+                      - {outcome: AWAY, odds: '3.50'}
+        '503':
+          description: Линия временно недоступна
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: {code: unavailable, message: Line is temporarily unavailable}
+components:
+  schemas:
+    LineSnapshot:
+      type: object
+      required: [version, matches]
+      properties:
+        version: {type: integer, format: int64, minimum: 0}
+        matches:
+          type: array
+          items: {$ref: '#/components/schemas/Match'}
+    Match:
+      type: object
+      required: [matchId, homeTeam, awayTeam, open, quotes]
+      properties:
+        matchId: {type: string}
+        homeTeam: {type: string}
+        awayTeam: {type: string}
+        open: {type: boolean}
+        quotes:
+          type: array
+          minItems: 3
+          maxItems: 3
+          description: Котировки HOME, DRAW и AWAY, по одной для каждого исхода.
+          items: {$ref: '#/components/schemas/Quote'}
+    Quote:
+      type: object
+      required: [outcome, odds]
+      properties:
+        outcome: {type: string, enum: [HOME, DRAW, AWAY]}
+        odds: {type: string, example: '2.10'}
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: {type: string}
+        message: {type: string}
