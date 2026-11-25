@@ -179,8 +179,31 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Error'}
               example: {code: unavailable, message: Service is temporarily unavailable}
+  /api/v1/wallet:
+    get:
+      summary: Получить баланс кошелька
+      operationId: getWallet
+      responses:
+        '200':
+          description: Доступный и зарезервированный баланс
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WalletBalance'}
+              example: {available: '0.00', reserved: '0.00'}
+        '503':
+          description: Кошелёк временно недоступен
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: unavailable, message: Wallet is temporarily unavailable}
 components:
   schemas:
+    WalletBalance:
+      type: object
+      required: [available, reserved]
+      properties:
+        available: {type: string, example: '0.00'}
+        reserved: {type: string, example: '0.00'}
     CreateBetRequest:
       type: object
       required: [offerId, odds, amount]

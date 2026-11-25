@@ -60,6 +60,12 @@ func main() {
 			log.Printf("write bet: %v", err)
 		}
 	})
+	mux.HandleFunc("GET /api/v1/wallet", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(map[string]string{"available": "0.00", "reserved": "0.00"}); err != nil {
+			log.Printf("write wallet balance: %v", err)
+		}
+	})
 	mux.HandleFunc("GET /api/v1/bets/{betId}", getBet)
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

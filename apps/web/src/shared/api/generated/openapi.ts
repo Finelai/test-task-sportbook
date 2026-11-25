@@ -103,10 +103,33 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/wallet": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить баланс кошелька */
+    get: operations["getWallet"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    WalletBalance: {
+      /** @example 0.00 */
+      available: string;
+      /** @example 0.00 */
+      reserved: string;
+    };
     CreateBetRequest: {
       /** @example offer-1 */
       offerId: string;
@@ -521,6 +544,47 @@ export interface operations {
            * @example {
            *       "code": "unavailable",
            *       "message": "Service is temporarily unavailable"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getWallet: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Доступный и зарезервированный баланс */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "available": "0.00",
+           *       "reserved": "0.00"
+           *     }
+           */
+          "application/json": components["schemas"]["WalletBalance"];
+        };
+      };
+      /** @description Кошелёк временно недоступен */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "unavailable",
+           *       "message": "Wallet is temporarily unavailable"
            *     }
            */
           "application/json": components["schemas"]["Error"];
