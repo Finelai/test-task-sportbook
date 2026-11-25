@@ -21,3 +21,5 @@ docker compose -p bets-manual --profile bets-check down
 ```
 
 Для настройки обработчика доступны `BETS_LEASE`, `BETS_GRPC_DEADLINE`, `BETS_RETRY_MIN`, `BETS_RETRY_MAX`, `BETS_POLL_INTERVAL` в формате Go duration. По умолчанию используются 15 секунд, 2 секунды, 1 секунда, 30 секунд и 200 миллисекунд соответственно.
+
+Bets использует pgx и типизированные запросы, сгенерированные sqlc из `queries/bets.sql`. Команда `make generate` обновляет сгенерированный код.

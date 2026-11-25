@@ -30,6 +30,7 @@ lint-web:
 
 PROTOC_GEN_GO := .bin/protoc-gen-go-v1.36.12
 PROTOC_GEN_GO_GRPC := .bin/protoc-gen-go-grpc-v1.5.1
+SQLC := .bin/sqlc-v1.30.0
 
 $(PROTOC_GEN_GO):
 	mkdir -p .bin
@@ -41,7 +42,13 @@ $(PROTOC_GEN_GO_GRPC):
 	GOBIN="$(CURDIR)/.bin" go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 	mv .bin/protoc-gen-go-grpc $@
 
-generate: $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC)
+$(SQLC):
+	mkdir -p .bin
+	GOBIN="$(CURDIR)/.bin" go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
+	mv .bin/sqlc $@
+
+generate: $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC) $(SQLC)
+	$(SQLC) generate -f services/bets/sqlc.yaml
 	cd contracts/proto && ../../apps/web/node_modules/.bin/buf generate
 	npm --prefix apps/web exec -- openapi-typescript contracts/openapi/v1.yaml -o apps/web/src/shared/api/generated/openapi.ts
 	npm --prefix apps/web exec -- prettier --write apps/web/src/shared/api/generated/openapi.ts

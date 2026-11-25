@@ -28,13 +28,17 @@ type lossProxy struct {
 	line    linev1.LineServiceClient
 	wallet  walletv1.WalletServiceClient
 	target  string
+	betID   string
 	lost    chan struct{}
 	dropped atomic.Bool
+	hold    atomic.Bool
 }
 
-func (p *lossProxy) lose(ctx context.Context, method string, err error) error {
-	if err == nil && p.target == method && p.dropped.CompareAndSwap(false, true) {
-		close(p.lost)
+func (p *lossProxy) lose(ctx context.Context, method, betID string, err error) error {
+	if err == nil && p.target == method && p.betID == betID && p.hold.Load() {
+		if p.dropped.CompareAndSwap(false, true) {
+			close(p.lost)
+		}
 		<-ctx.Done()
 		return ctx.Err()
 	}
@@ -42,15 +46,15 @@ func (p *lossProxy) lose(ctx context.Context, method string, err error) error {
 }
 func (p *lossProxy) ConfirmOffer(ctx context.Context, r *linev1.ConfirmOfferRequest) (*linev1.ConfirmOfferResponse, error) {
 	v, e := p.line.ConfirmOffer(ctx, r)
-	return v, p.lose(ctx, "confirm", e)
+	return v, p.lose(ctx, "confirm", r.BetId, e)
 }
 func (p *lossProxy) Reserve(ctx context.Context, r *walletv1.ReserveRequest) (*walletv1.ReserveResponse, error) {
 	v, e := p.wallet.Reserve(ctx, r)
-	return v, p.lose(ctx, "reserve", e)
+	return v, p.lose(ctx, "reserve", r.BetId, e)
 }
 func (p *lossProxy) Capture(ctx context.Context, r *walletv1.ReserveKey) (*walletv1.CaptureResponse, error) {
 	v, e := p.wallet.Capture(ctx, r)
-	return v, p.lose(ctx, "capture", e)
+	return v, p.lose(ctx, "capture", r.BetId, e)
 }
 func TestRecoverAfterProcessRestart(t *testing.T) {
 	f := system(t)
@@ -77,7 +81,7 @@ func TestRecoverAfterProcessRestart(t *testing.T) {
 	line := linev1.NewLineServiceClient(dial(f.lineGRPC))
 	wallet := walletv1.NewWalletServiceClient(dial(f.walletGRPC))
 	for i, target := range []string{"confirm", "reserve", "capture"} {
-		t.Run(target, func(t *testing.T) {
+		if !t.Run(target, func(t *testing.T) {
 			offer := post(t, f.lineHTTP+"/api/v1/line/offers", fmt.Sprintf(`{"matchId":"match-%d","outcome":"AWAY"}`, i+1), "")
 			var whole, frac int64
 			if _, e := fmt.Sscanf(offer["odds"].(string), "%d.%d", &whole, &frac); e != nil {
@@ -91,7 +95,8 @@ func TestRecoverAfterProcessRestart(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			proxy := &lossProxy{line: line, wallet: wallet, target: target, lost: make(chan struct{})}
+			proxy := &lossProxy{line: line, wallet: wallet, target: target, betID: bet.ID, lost: make(chan struct{})}
+			proxy.hold.Store(true)
 			server := grpc.NewServer()
 			linev1.RegisterLineServiceServer(server, proxy)
 			walletv1.RegisterWalletServiceServer(server, proxy)
@@ -119,7 +124,7 @@ func TestRecoverAfterProcessRestart(t *testing.T) {
 			for n := 0; n < 100; n++ {
 				r, err := http.Get("http://" + httpAddr + "/readyz")
 				if err == nil {
-					r.Body.Close()
+					_ = r.Body.Close()
 					if r.StatusCode == 200 {
 						ready = true
 						break
@@ -144,10 +149,23 @@ func TestRecoverAfterProcessRestart(t *testing.T) {
 				_ = f.db.QueryRow(ctx, "SELECT status,stage,attempts FROM bets WHERE id=$1", bet.ID).Scan(&state, &stage, &attempts)
 				t.Fatalf("action did not reach proxy; status=%s stage=%s attempts=%d output: %s activity: %s", state, stage, attempts, logs.String(), activity)
 			}
+			var currentStatus, currentStage string
+			if e = f.db.QueryRow(ctx, "SELECT status,stage FROM bets WHERE id=$1", bet.ID).Scan(&currentStatus, &currentStage); e != nil {
+				_ = first.Process.Kill()
+				_ = first.Wait()
+				t.Fatal(e)
+			}
+			expectedStage := map[string]string{"confirm": "confirm_offer", "reserve": "reserve", "capture": "capture"}[target]
+			if currentStatus != "pending" || currentStage != expectedStage {
+				_ = first.Process.Kill()
+				_ = first.Wait()
+				t.Fatalf("before restart: status=%s stage=%s, expected pending/%s", currentStatus, currentStage, expectedStage)
+			}
 			if e = first.Process.Kill(); e != nil {
 				t.Fatal(e)
 			}
 			_ = first.Wait()
+			proxy.hold.Store(false)
 			second := start()
 			defer func() { _ = second.Process.Kill(); _ = second.Wait() }()
 			finished := false
@@ -179,13 +197,15 @@ func TestRecoverAfterProcessRestart(t *testing.T) {
 			if e != nil || replay.ID != bet.ID {
 				t.Fatalf("replay %+v error %v", replay, e)
 			}
-		})
+		}) {
+			t.FailNow()
+		}
 	}
 	res, e := http.Get(f.walletHTTP + "/api/v1/wallet")
 	if e != nil {
 		t.Fatal(e)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	var balance map[string]string
 	if e = json.NewDecoder(res.Body).Decode(&balance); e != nil || balance["available"] != "21.00" || balance["reserved"] != "0.00" {
 		t.Fatalf("balance=%v error=%v", balance, e)

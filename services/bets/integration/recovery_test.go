@@ -120,7 +120,7 @@ func post(t *testing.T, url, body, key string) map[string]any {
 	if e != nil {
 		t.Fatal(e)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	var data map[string]any
 	if e = json.NewDecoder(res.Body).Decode(&data); e != nil || res.StatusCode >= 300 {
 		t.Fatalf("POST %s: status %d response %v error %v", url, res.StatusCode, data, e)
@@ -198,7 +198,7 @@ func TestRecoverAfterActions(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	var balance map[string]string
 	if e = json.NewDecoder(res.Body).Decode(&balance); e != nil || balance["available"] != "21.00" || balance["reserved"] != "0.00" {
 		t.Fatalf("balance=%v error=%v", balance, e)
@@ -311,7 +311,7 @@ func TestRejectWithoutCharge(t *testing.T) {
 	}
 	for _, id := range ids {
 		state, reason = process(id)
-		if state != "accepted" && !(state == "rejected" && reason == "insufficient_funds") {
+		if state != "accepted" && (state != "rejected" || reason != "insufficient_funds") {
 			t.Fatalf("status=%s reason=%s", state, reason)
 		}
 	}
@@ -323,7 +323,7 @@ func TestRejectWithoutCharge(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	var balance map[string]string
 	if e = json.NewDecoder(res.Body).Decode(&balance); e != nil || balance["available"] != "0.00" || balance["reserved"] != "0.00" {
 		t.Fatalf("balance=%v error=%v", balance, e)

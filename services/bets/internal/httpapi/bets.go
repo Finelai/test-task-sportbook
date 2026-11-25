@@ -32,7 +32,7 @@ func New(store Store) http.Handler {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
 		if store.Ping(ctx) != nil {
-			http.Error(w, "unavailable", 503)
+			http.Error(w, "unavailable", http.StatusServiceUnavailable)
 			return
 		}
 		w.WriteHeader(200)
