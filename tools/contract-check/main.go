@@ -60,5 +60,20 @@ func main() {
 			log.Printf("write bet: %v", err)
 		}
 	})
+	mux.HandleFunc("GET /api/v1/bets/{betId}", getBet)
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+func getBet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var body map[string]string
+	if r.PathValue("betId") == "bet-1" {
+		body = map[string]string{"betId": "bet-1", "status": "pending", "amount": "3.00", "odds": "2.10"}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		body = map[string]string{"code": "not_found", "message": "Bet not found"}
+	}
+	if err := json.NewEncoder(w).Encode(body); err != nil {
+		log.Printf("write bet: %v", err)
+	}
 }

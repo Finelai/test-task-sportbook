@@ -77,3 +77,27 @@ func testCreateBet(t *testing.T, doc openAPIDocument) {
 	}
 
 }
+
+func testGetBet(t *testing.T, doc openAPIDocument) {
+	op, ok := doc.Paths["/api/v1/bets/{betId}"]["get"]
+	if !ok {
+		t.Fatal("GET /api/v1/bets/{betId} missing")
+	}
+	required := false
+	for _, p := range op.Parameters {
+		if p.Name == "betId" && p.In == "path" && p.Required {
+			required = true
+		}
+	}
+	if !required {
+		t.Error("betId path parameter must be required")
+	}
+	if op.Responses["200"].Content["application/json"].Schema.Ref != "#/components/schemas/Bet" {
+		t.Error("200 must return JSON Bet")
+	}
+	for _, status := range []string{"404", "503"} {
+		if op.Responses[status].Content["application/json"].Schema.Ref != "#/components/schemas/Error" {
+			t.Errorf("%s must return JSON Error", status)
+		}
+	}
+}

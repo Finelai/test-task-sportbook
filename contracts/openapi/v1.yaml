@@ -149,6 +149,36 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Error'}
               example: {code: unavailable, message: Service is temporarily unavailable}
+  /api/v1/bets/{betId}:
+    get:
+      summary: Получить ставку
+      operationId: getBet
+      parameters:
+        - name: betId
+          in: path
+          required: true
+          description: Идентификатор ставки
+          schema: {type: string}
+          example: bet-1
+      responses:
+        '200':
+          description: Ставка
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Bet'}
+              example: {betId: bet-1, status: pending, amount: '3.00', odds: '2.10'}
+        '404':
+          description: Ставка не найдена
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: not_found, message: Bet not found}
+        '503':
+          description: Сервис временно недоступен
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: unavailable, message: Service is temporarily unavailable}
 components:
   schemas:
     CreateBetRequest:

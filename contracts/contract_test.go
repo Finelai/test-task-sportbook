@@ -73,4 +73,5 @@ func TestPublishedContracts(t *testing.T) {
 	t.Run("line_events", func(t *testing.T) { testLineEvents(t, doc) })
 	t.Run("line_offer", func(t *testing.T) { testLineOffer(t, doc) })
 	t.Run("create_bet", func(t *testing.T) { testCreateBet(t, doc) })
+	t.Run("get_bet", func(t *testing.T) { testGetBet(t, doc) })
 }

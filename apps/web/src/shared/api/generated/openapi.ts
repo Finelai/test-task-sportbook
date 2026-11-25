@@ -86,6 +86,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/bets/{betId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Получить ставку */
+    get: operations["getBet"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -431,6 +448,70 @@ export interface operations {
         };
       };
       /** @description Сервис временно недоступен; это не означает отказ ставки */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "unavailable",
+           *       "message": "Service is temporarily unavailable"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getBet: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /**
+         * @description Идентификатор ставки
+         * @example bet-1
+         */
+        betId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ставка */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "betId": "bet-1",
+           *       "status": "pending",
+           *       "amount": "3.00",
+           *       "odds": "2.10"
+           *     }
+           */
+          "application/json": components["schemas"]["Bet"];
+        };
+      };
+      /** @description Ставка не найдена */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "not_found",
+           *       "message": "Bet not found"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Сервис временно недоступен */
       503: {
         headers: {
           [name: string]: unknown;
