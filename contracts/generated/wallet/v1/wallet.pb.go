@@ -73,6 +73,58 @@ func (ReserveResult) EnumDescriptor() ([]byte, []int) {
 	return file_wallet_v1_wallet_proto_rawDescGZIP(), []int{0}
 }
 
+type CaptureResult int32
+
+const (
+	CaptureResult_CAPTURE_RESULT_UNSPECIFIED CaptureResult = 0
+	CaptureResult_CAPTURED                   CaptureResult = 1
+	CaptureResult_CAPTURE_PARAMETER_CONFLICT CaptureResult = 2
+	CaptureResult_ALREADY_RELEASED           CaptureResult = 3
+)
+
+// Enum value maps for CaptureResult.
+var (
+	CaptureResult_name = map[int32]string{
+		0: "CAPTURE_RESULT_UNSPECIFIED",
+		1: "CAPTURED",
+		2: "CAPTURE_PARAMETER_CONFLICT",
+		3: "ALREADY_RELEASED",
+	}
+	CaptureResult_value = map[string]int32{
+		"CAPTURE_RESULT_UNSPECIFIED": 0,
+		"CAPTURED":                   1,
+		"CAPTURE_PARAMETER_CONFLICT": 2,
+		"ALREADY_RELEASED":           3,
+	}
+)
+
+func (x CaptureResult) Enum() *CaptureResult {
+	p := new(CaptureResult)
+	*p = x
+	return p
+}
+
+func (x CaptureResult) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CaptureResult) Descriptor() protoreflect.EnumDescriptor {
+	return file_wallet_v1_wallet_proto_enumTypes[1].Descriptor()
+}
+
+func (CaptureResult) Type() protoreflect.EnumType {
+	return &file_wallet_v1_wallet_proto_enumTypes[1]
+}
+
+func (x CaptureResult) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CaptureResult.Descriptor instead.
+func (CaptureResult) EnumDescriptor() ([]byte, []int) {
+	return file_wallet_v1_wallet_proto_rawDescGZIP(), []int{1}
+}
+
 type ReserveRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BetId         string                 `protobuf:"bytes,1,opt,name=bet_id,json=betId,proto3" json:"bet_id,omitempty"`
@@ -177,6 +229,102 @@ func (x *ReserveResponse) GetResult() ReserveResult {
 	return ReserveResult_RESERVE_RESULT_UNSPECIFIED
 }
 
+type ReserveKey struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BetId         string                 `protobuf:"bytes,1,opt,name=bet_id,json=betId,proto3" json:"bet_id,omitempty"`
+	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReserveKey) Reset() {
+	*x = ReserveKey{}
+	mi := &file_wallet_v1_wallet_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReserveKey) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReserveKey) ProtoMessage() {}
+
+func (x *ReserveKey) ProtoReflect() protoreflect.Message {
+	mi := &file_wallet_v1_wallet_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReserveKey.ProtoReflect.Descriptor instead.
+func (*ReserveKey) Descriptor() ([]byte, []int) {
+	return file_wallet_v1_wallet_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ReserveKey) GetBetId() string {
+	if x != nil {
+		return x.BetId
+	}
+	return ""
+}
+
+func (x *ReserveKey) GetPlayerId() string {
+	if x != nil {
+		return x.PlayerId
+	}
+	return ""
+}
+
+type CaptureResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        CaptureResult          `protobuf:"varint,1,opt,name=result,proto3,enum=wallet.v1.CaptureResult" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaptureResponse) Reset() {
+	*x = CaptureResponse{}
+	mi := &file_wallet_v1_wallet_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaptureResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaptureResponse) ProtoMessage() {}
+
+func (x *CaptureResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_wallet_v1_wallet_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaptureResponse.ProtoReflect.Descriptor instead.
+func (*CaptureResponse) Descriptor() ([]byte, []int) {
+	return file_wallet_v1_wallet_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CaptureResponse) GetResult() CaptureResult {
+	if x != nil {
+		return x.Result
+	}
+	return CaptureResult_CAPTURE_RESULT_UNSPECIFIED
+}
+
 var File_wallet_v1_wallet_proto protoreflect.FileDescriptor
 
 const file_wallet_v1_wallet_proto_rawDesc = "" +
@@ -187,14 +335,26 @@ const file_wallet_v1_wallet_proto_rawDesc = "" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12!\n" +
 	"\famount_minor\x18\x03 \x01(\x03R\vamountMinor\"C\n" +
 	"\x0fReserveResponse\x120\n" +
-	"\x06result\x18\x01 \x01(\x0e2\x18.wallet.v1.ReserveResultR\x06result*m\n" +
+	"\x06result\x18\x01 \x01(\x0e2\x18.wallet.v1.ReserveResultR\x06result\"@\n" +
+	"\n" +
+	"ReserveKey\x12\x15\n" +
+	"\x06bet_id\x18\x01 \x01(\tR\x05betId\x12\x1b\n" +
+	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\"C\n" +
+	"\x0fCaptureResponse\x120\n" +
+	"\x06result\x18\x01 \x01(\x0e2\x18.wallet.v1.CaptureResultR\x06result*m\n" +
 	"\rReserveResult\x12\x1e\n" +
 	"\x1aRESERVE_RESULT_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bRESERVED\x10\x01\x12\x16\n" +
 	"\x12INSUFFICIENT_FUNDS\x10\x02\x12\x16\n" +
-	"\x12PARAMETER_CONFLICT\x10\x032Q\n" +
+	"\x12PARAMETER_CONFLICT\x10\x03*s\n" +
+	"\rCaptureResult\x12\x1e\n" +
+	"\x1aCAPTURE_RESULT_UNSPECIFIED\x10\x00\x12\f\n" +
+	"\bCAPTURED\x10\x01\x12\x1e\n" +
+	"\x1aCAPTURE_PARAMETER_CONFLICT\x10\x02\x12\x14\n" +
+	"\x10ALREADY_RELEASED\x10\x032\x8f\x01\n" +
 	"\rWalletService\x12@\n" +
-	"\aReserve\x12\x19.wallet.v1.ReserveRequest\x1a\x1a.wallet.v1.ReserveResponseBOZMgithub.com/finelai/test-task-sportbook/contracts/generated/wallet/v1;walletv1b\x06proto3"
+	"\aReserve\x12\x19.wallet.v1.ReserveRequest\x1a\x1a.wallet.v1.ReserveResponse\x12<\n" +
+	"\aCapture\x12\x15.wallet.v1.ReserveKey\x1a\x1a.wallet.v1.CaptureResponseBOZMgithub.com/finelai/test-task-sportbook/contracts/generated/wallet/v1;walletv1b\x06proto3"
 
 var (
 	file_wallet_v1_wallet_proto_rawDescOnce sync.Once
@@ -208,22 +368,28 @@ func file_wallet_v1_wallet_proto_rawDescGZIP() []byte {
 	return file_wallet_v1_wallet_proto_rawDescData
 }
 
-var file_wallet_v1_wallet_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_wallet_v1_wallet_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_wallet_v1_wallet_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_wallet_v1_wallet_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_wallet_v1_wallet_proto_goTypes = []any{
 	(ReserveResult)(0),      // 0: wallet.v1.ReserveResult
-	(*ReserveRequest)(nil),  // 1: wallet.v1.ReserveRequest
-	(*ReserveResponse)(nil), // 2: wallet.v1.ReserveResponse
+	(CaptureResult)(0),      // 1: wallet.v1.CaptureResult
+	(*ReserveRequest)(nil),  // 2: wallet.v1.ReserveRequest
+	(*ReserveResponse)(nil), // 3: wallet.v1.ReserveResponse
+	(*ReserveKey)(nil),      // 4: wallet.v1.ReserveKey
+	(*CaptureResponse)(nil), // 5: wallet.v1.CaptureResponse
 }
 var file_wallet_v1_wallet_proto_depIdxs = []int32{
 	0, // 0: wallet.v1.ReserveResponse.result:type_name -> wallet.v1.ReserveResult
-	1, // 1: wallet.v1.WalletService.Reserve:input_type -> wallet.v1.ReserveRequest
-	2, // 2: wallet.v1.WalletService.Reserve:output_type -> wallet.v1.ReserveResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1, // 1: wallet.v1.CaptureResponse.result:type_name -> wallet.v1.CaptureResult
+	2, // 2: wallet.v1.WalletService.Reserve:input_type -> wallet.v1.ReserveRequest
+	4, // 3: wallet.v1.WalletService.Capture:input_type -> wallet.v1.ReserveKey
+	3, // 4: wallet.v1.WalletService.Reserve:output_type -> wallet.v1.ReserveResponse
+	5, // 5: wallet.v1.WalletService.Capture:output_type -> wallet.v1.CaptureResponse
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_wallet_v1_wallet_proto_init() }
@@ -236,8 +402,8 @@ func file_wallet_v1_wallet_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_wallet_v1_wallet_proto_rawDesc), len(file_wallet_v1_wallet_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   2,
+			NumEnums:      2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

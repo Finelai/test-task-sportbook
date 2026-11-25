@@ -7,6 +7,7 @@ option go_package = "github.com/finelai/test-task-sportbook/contracts/generated/
 // Transient and network failures are returned as gRPC status errors.
 service WalletService {
   rpc Reserve(ReserveRequest) returns (ReserveResponse);
+  rpc Capture(ReserveKey) returns (CaptureResponse);
 }
 
 message ReserveRequest {
@@ -24,4 +25,20 @@ enum ReserveResult {
   RESERVED = 1;
   INSUFFICIENT_FUNDS = 2;
   PARAMETER_CONFLICT = 3;
+}
+
+message ReserveKey {
+  string bet_id = 1;
+  string player_id = 2;
+}
+
+message CaptureResponse {
+  CaptureResult result = 1;
+}
+
+enum CaptureResult {
+  CAPTURE_RESULT_UNSPECIFIED = 0;
+  CAPTURED = 1;
+  CAPTURE_PARAMETER_CONFLICT = 2;
+  ALREADY_RELEASED = 3;
 }

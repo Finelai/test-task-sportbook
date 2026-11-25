@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	WalletService_Reserve_FullMethodName = "/wallet.v1.WalletService/Reserve"
+	WalletService_Capture_FullMethodName = "/wallet.v1.WalletService/Capture"
 )
 
 // WalletServiceClient is the client API for WalletService service.
@@ -29,6 +30,7 @@ const (
 // Transient and network failures are returned as gRPC status errors.
 type WalletServiceClient interface {
 	Reserve(ctx context.Context, in *ReserveRequest, opts ...grpc.CallOption) (*ReserveResponse, error)
+	Capture(ctx context.Context, in *ReserveKey, opts ...grpc.CallOption) (*CaptureResponse, error)
 }
 
 type walletServiceClient struct {
@@ -49,6 +51,16 @@ func (c *walletServiceClient) Reserve(ctx context.Context, in *ReserveRequest, o
 	return out, nil
 }
 
+func (c *walletServiceClient) Capture(ctx context.Context, in *ReserveKey, opts ...grpc.CallOption) (*CaptureResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CaptureResponse)
+	err := c.cc.Invoke(ctx, WalletService_Capture_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WalletServiceServer is the server API for WalletService service.
 // All implementations must embed UnimplementedWalletServiceServer
 // for forward compatibility.
@@ -56,6 +68,7 @@ func (c *walletServiceClient) Reserve(ctx context.Context, in *ReserveRequest, o
 // Transient and network failures are returned as gRPC status errors.
 type WalletServiceServer interface {
 	Reserve(context.Context, *ReserveRequest) (*ReserveResponse, error)
+	Capture(context.Context, *ReserveKey) (*CaptureResponse, error)
 	mustEmbedUnimplementedWalletServiceServer()
 }
 
@@ -68,6 +81,9 @@ type UnimplementedWalletServiceServer struct{}
 
 func (UnimplementedWalletServiceServer) Reserve(context.Context, *ReserveRequest) (*ReserveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Reserve not implemented")
+}
+func (UnimplementedWalletServiceServer) Capture(context.Context, *ReserveKey) (*CaptureResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Capture not implemented")
 }
 func (UnimplementedWalletServiceServer) mustEmbedUnimplementedWalletServiceServer() {}
 func (UnimplementedWalletServiceServer) testEmbeddedByValue()                       {}
@@ -108,6 +124,24 @@ func _WalletService_Reserve_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WalletService_Capture_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReserveKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).Capture(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WalletService_Capture_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).Capture(ctx, req.(*ReserveKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WalletService_ServiceDesc is the grpc.ServiceDesc for WalletService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -118,6 +152,10 @@ var WalletService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Reserve",
 			Handler:    _WalletService_Reserve_Handler,
+		},
+		{
+			MethodName: "Capture",
+			Handler:    _WalletService_Capture_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
