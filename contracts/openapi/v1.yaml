@@ -104,8 +104,84 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Error'}
               example: {code: unavailable, message: Line is temporarily unavailable}
+  /api/v1/bets:
+    post:
+      summary: Создать ставку
+      description: |
+        Создаёт ставку по предложению. Временная недоступность сервиса
+        не означает отказ ставки и не переводит её в статус rejected.
+      operationId: createBet
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Ключ идемпотентности запроса
+          schema: {type: string}
+          example: bet-example-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateBetRequest'}
+            example: {offerId: offer-1, odds: '2.10', amount: '3.00'}
+      responses:
+        '202':
+          description: Ставка принята в обработку
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Bet'}
+              example: {betId: bet-1, status: pending, amount: '3.00', odds: '2.10'}
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: invalid_request, message: Invalid request}
+        '409':
+          description: Конфликт параметров повторного запроса
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: idempotency_conflict, message: Idempotency key conflict}
+        '503':
+          description: Сервис временно недоступен; это не означает отказ ставки
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: unavailable, message: Service is temporarily unavailable}
 components:
   schemas:
+    CreateBetRequest:
+      type: object
+      required: [offerId, odds, amount]
+      properties:
+        offerId: {type: string, example: offer-1}
+        odds: {type: string, example: '2.10'}
+        amount: {type: string, example: '3.00'}
+    Bet:
+      description: Ставка в обработке, принятая или отклонённая.
+      oneOf:
+        - $ref: '#/components/schemas/ActiveBet'
+        - $ref: '#/components/schemas/RejectedBet'
+    ActiveBet:
+      type: object
+      required: [betId, status, amount, odds]
+      properties:
+        betId: {type: string, example: bet-1}
+        status: {type: string, enum: [pending, accepted]}
+        amount: {type: string, example: '3.00'}
+        odds: {type: string, example: '2.10'}
+    RejectedBet:
+      type: object
+      required: [betId, status, amount, odds, reason]
+      properties:
+        betId: {type: string, example: bet-1}
+        status: {type: string, enum: [rejected]}
+        amount: {type: string, example: '3.00'}
+        odds: {type: string, example: '2.10'}
+        reason:
+          type: string
+          enum: [offer_expired, odds_changed, offer_unavailable, offer_mismatch, market_closed, insufficient_funds]
     OfferRequest:
       type: object
       required: [matchId, outcome]

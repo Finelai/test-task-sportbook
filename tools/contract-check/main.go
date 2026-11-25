@@ -51,5 +51,14 @@ func main() {
 			log.Printf("write offer: %v", err)
 		}
 	})
+	mux.HandleFunc("POST /api/v1/bets", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		if err := json.NewEncoder(w).Encode(map[string]string{
+			"betId": "bet-1", "status": "pending", "amount": "3.00", "odds": "2.10",
+		}); err != nil {
+			log.Printf("write bet: %v", err)
+		}
+	})
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

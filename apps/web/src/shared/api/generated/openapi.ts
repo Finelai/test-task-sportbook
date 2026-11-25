@@ -65,10 +65,71 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/bets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Создать ставку
+     * @description Создаёт ставку по предложению. Временная недоступность сервиса
+     *     не означает отказ ставки и не переводит её в статус rejected.
+     */
+    post: operations["createBet"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    CreateBetRequest: {
+      /** @example offer-1 */
+      offerId: string;
+      /** @example 2.10 */
+      odds: string;
+      /** @example 3.00 */
+      amount: string;
+    };
+    /** @description Ставка в обработке, принятая или отклонённая. */
+    Bet:
+      | components["schemas"]["ActiveBet"]
+      | components["schemas"]["RejectedBet"];
+    ActiveBet: {
+      /** @example bet-1 */
+      betId: string;
+      /** @enum {string} */
+      status: "pending" | "accepted";
+      /** @example 3.00 */
+      amount: string;
+      /** @example 2.10 */
+      odds: string;
+    };
+    RejectedBet: {
+      /** @example bet-1 */
+      betId: string;
+      /** @enum {string} */
+      status: "rejected";
+      /** @example 3.00 */
+      amount: string;
+      /** @example 2.10 */
+      odds: string;
+      /** @enum {string} */
+      reason:
+        | "offer_expired"
+        | "odds_changed"
+        | "offer_unavailable"
+        | "offer_mismatch"
+        | "market_closed"
+        | "insufficient_funds";
+    };
     OfferRequest: {
       /** @example match-1 */
       matchId: string;
@@ -289,6 +350,96 @@ export interface operations {
            * @example {
            *       "code": "unavailable",
            *       "message": "Line is temporarily unavailable"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  createBet: {
+    parameters: {
+      query?: never;
+      header: {
+        /**
+         * @description Ключ идемпотентности запроса
+         * @example bet-example-1
+         */
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *       "offerId": "offer-1",
+         *       "odds": "2.10",
+         *       "amount": "3.00"
+         *     }
+         */
+        "application/json": components["schemas"]["CreateBetRequest"];
+      };
+    };
+    responses: {
+      /** @description Ставка принята в обработку */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "betId": "bet-1",
+           *       "status": "pending",
+           *       "amount": "3.00",
+           *       "odds": "2.10"
+           *     }
+           */
+          "application/json": components["schemas"]["Bet"];
+        };
+      };
+      /** @description Некорректный запрос */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "invalid_request",
+           *       "message": "Invalid request"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Конфликт параметров повторного запроса */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "idempotency_conflict",
+           *       "message": "Idempotency key conflict"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Сервис временно недоступен; это не означает отказ ставки */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "unavailable",
+           *       "message": "Service is temporarily unavailable"
            *     }
            */
           "application/json": components["schemas"]["Error"];
