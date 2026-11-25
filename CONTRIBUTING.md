@@ -29,10 +29,12 @@ each clone; run `make test-hooks` to verify the hook.
 
 ## Branches and merging
 
-Name branches `type/short-description`, using lowercase Latin letters, digits,
-and single hyphens between words. Use a commit type listed above or `codex`
-as the prefix. Examples: `feat/add-bets`, `fix/invalid-amount`, and
-`codex/update-contract`.
+Follow [Conventional Branch 1.0.0](https://conventionalbranch.org/v1.0.0/).
+Name work branches `type/short-description`. The types are `feature`, `feat`,
+`bugfix`, `fix`, `hotfix`, `release`, and `chore`. Use lowercase Latin letters
+and digits in the description; separate segments with single hyphens or dots.
+Examples: `feat/add-bets`, `fix/invalid-amount`, and `release/v1.2.0`.
+The trunk names `main`, `master`, and `develop` do not require a prefix.
 
 Open a pull request to merge into `master`. Merge only after the CI checks pass.
 Use a Conventional Commit message for the resulting commit, including when
