@@ -13,6 +13,9 @@ func testWalletGRPCContract(t *testing.T) {
 	if service == nil {
 		t.Fatal("WalletService missing")
 	}
+	if service.Methods().Len() != 3 {
+		t.Errorf("wallet service has %d operations, want 3", service.Methods().Len())
+	}
 	method := service.Methods().ByName("Reserve")
 	if method == nil {
 		t.Fatal("Reserve missing")
@@ -52,6 +55,23 @@ func testWalletGRPCContract(t *testing.T) {
 	for _, name := range []protoreflect.Name{"CAPTURED", "CAPTURE_PARAMETER_CONFLICT", "ALREADY_RELEASED"} {
 		if captureResult.Enum().Values().ByName(name) == nil {
 			t.Errorf("capture result %s missing", name)
+		}
+	}
+
+	release := service.Methods().ByName("Release")
+	if release == nil {
+		t.Fatal("Release missing")
+	}
+	if release.Input().FullName() != capture.Input().FullName() {
+		t.Error("Release must use the same ReserveKey as Capture")
+	}
+	releaseResult := release.Output().Fields().ByName("result")
+	if releaseResult == nil || releaseResult.Kind() != protoreflect.EnumKind {
+		t.Fatal("Release result must be an enum")
+	}
+	for _, name := range []protoreflect.Name{"RELEASED", "RELEASE_PARAMETER_CONFLICT", "ALREADY_CAPTURED"} {
+		if releaseResult.Enum().Values().ByName(name) == nil {
+			t.Errorf("release result %s missing", name)
 		}
 	}
 

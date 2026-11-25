@@ -31,6 +31,10 @@ func (walletServer) Capture(context.Context, *walletv1.ReserveKey) (*walletv1.Ca
 	return &walletv1.CaptureResponse{Result: walletv1.CaptureResult_CAPTURED}, nil
 }
 
+func (walletServer) Release(context.Context, *walletv1.ReserveKey) (*walletv1.ReleaseResponse, error) {
+	return &walletv1.ReleaseResponse{Result: walletv1.ReleaseResult_RELEASED}, nil
+}
+
 func main() {
 	listener, err := net.Listen("tcp", ":9091")
 	if err != nil {

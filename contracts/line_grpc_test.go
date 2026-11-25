@@ -12,6 +12,9 @@ func testLineGRPCContract(t *testing.T) {
 	if svc == nil {
 		t.Fatal("LineService missing")
 	}
+	if svc.Methods().Len() != 1 {
+		t.Errorf("line service has %d operations, want 1", svc.Methods().Len())
+	}
 	method := svc.Methods().ByName("ConfirmOffer")
 	if method == nil {
 		t.Fatal("ConfirmOffer missing")

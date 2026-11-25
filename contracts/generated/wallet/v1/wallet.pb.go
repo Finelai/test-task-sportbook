@@ -125,6 +125,58 @@ func (CaptureResult) EnumDescriptor() ([]byte, []int) {
 	return file_wallet_v1_wallet_proto_rawDescGZIP(), []int{1}
 }
 
+type ReleaseResult int32
+
+const (
+	ReleaseResult_RELEASE_RESULT_UNSPECIFIED ReleaseResult = 0
+	ReleaseResult_RELEASED                   ReleaseResult = 1
+	ReleaseResult_RELEASE_PARAMETER_CONFLICT ReleaseResult = 2
+	ReleaseResult_ALREADY_CAPTURED           ReleaseResult = 3
+)
+
+// Enum value maps for ReleaseResult.
+var (
+	ReleaseResult_name = map[int32]string{
+		0: "RELEASE_RESULT_UNSPECIFIED",
+		1: "RELEASED",
+		2: "RELEASE_PARAMETER_CONFLICT",
+		3: "ALREADY_CAPTURED",
+	}
+	ReleaseResult_value = map[string]int32{
+		"RELEASE_RESULT_UNSPECIFIED": 0,
+		"RELEASED":                   1,
+		"RELEASE_PARAMETER_CONFLICT": 2,
+		"ALREADY_CAPTURED":           3,
+	}
+)
+
+func (x ReleaseResult) Enum() *ReleaseResult {
+	p := new(ReleaseResult)
+	*p = x
+	return p
+}
+
+func (x ReleaseResult) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ReleaseResult) Descriptor() protoreflect.EnumDescriptor {
+	return file_wallet_v1_wallet_proto_enumTypes[2].Descriptor()
+}
+
+func (ReleaseResult) Type() protoreflect.EnumType {
+	return &file_wallet_v1_wallet_proto_enumTypes[2]
+}
+
+func (x ReleaseResult) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ReleaseResult.Descriptor instead.
+func (ReleaseResult) EnumDescriptor() ([]byte, []int) {
+	return file_wallet_v1_wallet_proto_rawDescGZIP(), []int{2}
+}
+
 type ReserveRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BetId         string                 `protobuf:"bytes,1,opt,name=bet_id,json=betId,proto3" json:"bet_id,omitempty"`
@@ -325,6 +377,50 @@ func (x *CaptureResponse) GetResult() CaptureResult {
 	return CaptureResult_CAPTURE_RESULT_UNSPECIFIED
 }
 
+type ReleaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        ReleaseResult          `protobuf:"varint,1,opt,name=result,proto3,enum=wallet.v1.ReleaseResult" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseResponse) Reset() {
+	*x = ReleaseResponse{}
+	mi := &file_wallet_v1_wallet_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseResponse) ProtoMessage() {}
+
+func (x *ReleaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_wallet_v1_wallet_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseResponse.ProtoReflect.Descriptor instead.
+func (*ReleaseResponse) Descriptor() ([]byte, []int) {
+	return file_wallet_v1_wallet_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ReleaseResponse) GetResult() ReleaseResult {
+	if x != nil {
+		return x.Result
+	}
+	return ReleaseResult_RELEASE_RESULT_UNSPECIFIED
+}
+
 var File_wallet_v1_wallet_proto protoreflect.FileDescriptor
 
 const file_wallet_v1_wallet_proto_rawDesc = "" +
@@ -341,7 +437,9 @@ const file_wallet_v1_wallet_proto_rawDesc = "" +
 	"\x06bet_id\x18\x01 \x01(\tR\x05betId\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\"C\n" +
 	"\x0fCaptureResponse\x120\n" +
-	"\x06result\x18\x01 \x01(\x0e2\x18.wallet.v1.CaptureResultR\x06result*m\n" +
+	"\x06result\x18\x01 \x01(\x0e2\x18.wallet.v1.CaptureResultR\x06result\"C\n" +
+	"\x0fReleaseResponse\x120\n" +
+	"\x06result\x18\x01 \x01(\x0e2\x18.wallet.v1.ReleaseResultR\x06result*m\n" +
 	"\rReserveResult\x12\x1e\n" +
 	"\x1aRESERVE_RESULT_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bRESERVED\x10\x01\x12\x16\n" +
@@ -351,10 +449,16 @@ const file_wallet_v1_wallet_proto_rawDesc = "" +
 	"\x1aCAPTURE_RESULT_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bCAPTURED\x10\x01\x12\x1e\n" +
 	"\x1aCAPTURE_PARAMETER_CONFLICT\x10\x02\x12\x14\n" +
-	"\x10ALREADY_RELEASED\x10\x032\x8f\x01\n" +
+	"\x10ALREADY_RELEASED\x10\x03*s\n" +
+	"\rReleaseResult\x12\x1e\n" +
+	"\x1aRELEASE_RESULT_UNSPECIFIED\x10\x00\x12\f\n" +
+	"\bRELEASED\x10\x01\x12\x1e\n" +
+	"\x1aRELEASE_PARAMETER_CONFLICT\x10\x02\x12\x14\n" +
+	"\x10ALREADY_CAPTURED\x10\x032\xcd\x01\n" +
 	"\rWalletService\x12@\n" +
 	"\aReserve\x12\x19.wallet.v1.ReserveRequest\x1a\x1a.wallet.v1.ReserveResponse\x12<\n" +
-	"\aCapture\x12\x15.wallet.v1.ReserveKey\x1a\x1a.wallet.v1.CaptureResponseBOZMgithub.com/finelai/test-task-sportbook/contracts/generated/wallet/v1;walletv1b\x06proto3"
+	"\aCapture\x12\x15.wallet.v1.ReserveKey\x1a\x1a.wallet.v1.CaptureResponse\x12<\n" +
+	"\aRelease\x12\x15.wallet.v1.ReserveKey\x1a\x1a.wallet.v1.ReleaseResponseBOZMgithub.com/finelai/test-task-sportbook/contracts/generated/wallet/v1;walletv1b\x06proto3"
 
 var (
 	file_wallet_v1_wallet_proto_rawDescOnce sync.Once
@@ -368,28 +472,33 @@ func file_wallet_v1_wallet_proto_rawDescGZIP() []byte {
 	return file_wallet_v1_wallet_proto_rawDescData
 }
 
-var file_wallet_v1_wallet_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_wallet_v1_wallet_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_wallet_v1_wallet_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_wallet_v1_wallet_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_wallet_v1_wallet_proto_goTypes = []any{
 	(ReserveResult)(0),      // 0: wallet.v1.ReserveResult
 	(CaptureResult)(0),      // 1: wallet.v1.CaptureResult
-	(*ReserveRequest)(nil),  // 2: wallet.v1.ReserveRequest
-	(*ReserveResponse)(nil), // 3: wallet.v1.ReserveResponse
-	(*ReserveKey)(nil),      // 4: wallet.v1.ReserveKey
-	(*CaptureResponse)(nil), // 5: wallet.v1.CaptureResponse
+	(ReleaseResult)(0),      // 2: wallet.v1.ReleaseResult
+	(*ReserveRequest)(nil),  // 3: wallet.v1.ReserveRequest
+	(*ReserveResponse)(nil), // 4: wallet.v1.ReserveResponse
+	(*ReserveKey)(nil),      // 5: wallet.v1.ReserveKey
+	(*CaptureResponse)(nil), // 6: wallet.v1.CaptureResponse
+	(*ReleaseResponse)(nil), // 7: wallet.v1.ReleaseResponse
 }
 var file_wallet_v1_wallet_proto_depIdxs = []int32{
 	0, // 0: wallet.v1.ReserveResponse.result:type_name -> wallet.v1.ReserveResult
 	1, // 1: wallet.v1.CaptureResponse.result:type_name -> wallet.v1.CaptureResult
-	2, // 2: wallet.v1.WalletService.Reserve:input_type -> wallet.v1.ReserveRequest
-	4, // 3: wallet.v1.WalletService.Capture:input_type -> wallet.v1.ReserveKey
-	3, // 4: wallet.v1.WalletService.Reserve:output_type -> wallet.v1.ReserveResponse
-	5, // 5: wallet.v1.WalletService.Capture:output_type -> wallet.v1.CaptureResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 2: wallet.v1.ReleaseResponse.result:type_name -> wallet.v1.ReleaseResult
+	3, // 3: wallet.v1.WalletService.Reserve:input_type -> wallet.v1.ReserveRequest
+	5, // 4: wallet.v1.WalletService.Capture:input_type -> wallet.v1.ReserveKey
+	5, // 5: wallet.v1.WalletService.Release:input_type -> wallet.v1.ReserveKey
+	4, // 6: wallet.v1.WalletService.Reserve:output_type -> wallet.v1.ReserveResponse
+	6, // 7: wallet.v1.WalletService.Capture:output_type -> wallet.v1.CaptureResponse
+	7, // 8: wallet.v1.WalletService.Release:output_type -> wallet.v1.ReleaseResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_wallet_v1_wallet_proto_init() }
@@ -402,8 +511,8 @@ func file_wallet_v1_wallet_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_wallet_v1_wallet_proto_rawDesc), len(file_wallet_v1_wallet_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   4,
+			NumEnums:      3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -69,6 +69,22 @@ func loadOpenAPI(t *testing.T) openAPIDocument {
 
 func TestPublishedContracts(t *testing.T) {
 	doc := loadOpenAPI(t)
+	expected := map[string]string{
+		"/api/v1/line": "get", "/api/v1/line/events": "get", "/api/v1/line/offers": "post",
+		"/api/v1/bets": "post", "/api/v1/bets/{betId}": "get", "/api/v1/wallet": "get", "/api/v1/wallet/credits": "post",
+	}
+	operationCount := 0
+	for _, operations := range doc.Paths {
+		operationCount += len(operations)
+	}
+	if operationCount != len(expected) {
+		t.Errorf("got %d HTTP operations, want %d", operationCount, len(expected))
+	}
+	for path, method := range expected {
+		if _, ok := doc.Paths[path][method]; !ok {
+			t.Errorf("%s %s missing", method, path)
+		}
+	}
 	t.Run("line_snapshot", func(t *testing.T) { testLineSnapshot(t, doc) })
 	t.Run("line_events", func(t *testing.T) { testLineEvents(t, doc) })
 	t.Run("line_offer", func(t *testing.T) { testLineOffer(t, doc) })

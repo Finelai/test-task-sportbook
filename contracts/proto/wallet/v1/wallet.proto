@@ -8,6 +8,7 @@ option go_package = "github.com/finelai/test-task-sportbook/contracts/generated/
 service WalletService {
   rpc Reserve(ReserveRequest) returns (ReserveResponse);
   rpc Capture(ReserveKey) returns (CaptureResponse);
+  rpc Release(ReserveKey) returns (ReleaseResponse);
 }
 
 message ReserveRequest {
@@ -41,4 +42,15 @@ enum CaptureResult {
   CAPTURED = 1;
   CAPTURE_PARAMETER_CONFLICT = 2;
   ALREADY_RELEASED = 3;
+}
+
+message ReleaseResponse {
+  ReleaseResult result = 1;
+}
+
+enum ReleaseResult {
+  RELEASE_RESULT_UNSPECIFIED = 0;
+  RELEASED = 1;
+  RELEASE_PARAMETER_CONFLICT = 2;
+  ALREADY_CAPTURED = 3;
 }
