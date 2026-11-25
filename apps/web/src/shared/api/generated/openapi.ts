@@ -120,10 +120,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/wallet/credits": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Пополнить кошелёк */
+    post: operations["creditWallet"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    CreditRequest: {
+      /** @example 10.00 */
+      amount: string;
+    };
+    CreditResult: {
+      /** @example credit-1 */
+      operationId: string;
+      /** @example 10.00 */
+      available: string;
+      /** @example 0.00 */
+      reserved: string;
+    };
     WalletBalance: {
       /** @example 0.00 */
       available: string;
@@ -573,6 +602,93 @@ export interface operations {
            *     }
            */
           "application/json": components["schemas"]["WalletBalance"];
+        };
+      };
+      /** @description Кошелёк временно недоступен */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "unavailable",
+           *       "message": "Wallet is temporarily unavailable"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  creditWallet: {
+    parameters: {
+      query?: never;
+      header: {
+        /**
+         * @description Ключ идемпотентности запроса
+         * @example credit-example-1
+         */
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *       "amount": "10.00"
+         *     }
+         */
+        "application/json": components["schemas"]["CreditRequest"];
+      };
+    };
+    responses: {
+      /** @description Пополнение выполнено */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "operationId": "credit-1",
+           *       "available": "10.00",
+           *       "reserved": "0.00"
+           *     }
+           */
+          "application/json": components["schemas"]["CreditResult"];
+        };
+      };
+      /** @description Некорректный запрос */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "invalid_request",
+           *       "message": "Invalid request"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Конфликт параметров повторного запроса */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "idempotency_conflict",
+           *       "message": "Idempotency key conflict"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
         };
       };
       /** @description Кошелёк временно недоступен */

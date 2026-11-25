@@ -196,8 +196,62 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Error'}
               example: {code: unavailable, message: Wallet is temporarily unavailable}
+  /api/v1/wallet/credits:
+    post:
+      summary: Пополнить кошелёк
+      operationId: creditWallet
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Ключ идемпотентности запроса
+          schema: {type: string}
+          example: credit-example-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreditRequest'}
+            example: {amount: '10.00'}
+      responses:
+        '201':
+          description: Пополнение выполнено
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CreditResult'}
+              example: {operationId: credit-1, available: '10.00', reserved: '0.00'}
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: invalid_request, message: Invalid request}
+        '409':
+          description: Конфликт параметров повторного запроса
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: idempotency_conflict, message: Idempotency key conflict}
+        '503':
+          description: Кошелёк временно недоступен
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: unavailable, message: Wallet is temporarily unavailable}
 components:
   schemas:
+    CreditRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount: {type: string, example: '10.00'}
+    CreditResult:
+      type: object
+      required: [operationId, available, reserved]
+      properties:
+        operationId: {type: string, example: credit-1}
+        available: {type: string, example: '10.00'}
+        reserved: {type: string, example: '0.00'}
     WalletBalance:
       type: object
       required: [available, reserved]
