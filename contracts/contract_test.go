@@ -14,6 +14,14 @@ func TestPublishedContracts(t *testing.T) {
 	}
 	var doc struct {
 		Paths map[string]map[string]struct {
+			RequestBody struct {
+				Required bool `yaml:"required"`
+				Content  map[string]struct {
+					Schema struct {
+						Ref string `yaml:"$ref"`
+					} `yaml:"schema"`
+				} `yaml:"content"`
+			} `yaml:"requestBody"`
 			Responses map[string]struct {
 				Content map[string]struct {
 					Schema struct {
@@ -29,10 +37,11 @@ func TestPublishedContracts(t *testing.T) {
 			Schemas map[string]struct {
 				Required   []string `yaml:"required"`
 				Properties map[string]struct {
-					Ref   string   `yaml:"$ref"`
-					Type  string   `yaml:"type"`
-					Enum  []string `yaml:"enum"`
-					Items struct {
+					Ref    string   `yaml:"$ref"`
+					Type   string   `yaml:"type"`
+					Format string   `yaml:"format"`
+					Enum   []string `yaml:"enum"`
+					Items  struct {
 						Ref  string   `yaml:"$ref"`
 						Enum []string `yaml:"enum"`
 					} `yaml:"items"`
@@ -99,6 +108,46 @@ func TestPublishedContracts(t *testing.T) {
 	}
 	if updated.Properties["version"].Type != "integer" || updated.Properties["match"].Ref != "#/components/schemas/Match" {
 		t.Error("match_updated must contain a version and a Match")
+	}
+
+	offerOp, ok := doc.Paths["/api/v1/line/offers"]["post"]
+	if !ok {
+		t.Fatal("POST /api/v1/line/offers missing")
+	}
+	if !offerOp.RequestBody.Required || offerOp.RequestBody.Content["application/json"].Schema.Ref != "#/components/schemas/OfferRequest" {
+		t.Error("required JSON offer request missing")
+	}
+	if offerOp.Responses["200"].Content["application/json"].Schema.Ref != "#/components/schemas/Offer" {
+		t.Error("200 JSON offer missing")
+	}
+	for _, status := range []string{"400", "409", "503"} {
+		if offerOp.Responses[status].Content["application/json"].Schema.Ref != "#/components/schemas/Error" {
+			t.Errorf("%s JSON error missing", status)
+		}
+	}
+	for name, fields := range map[string][]string{"OfferRequest": {"matchId", "outcome"}, "Offer": {"offerId", "matchId", "outcome", "odds", "expiresAt"}} {
+		schema := doc.Components.Schemas[name]
+		for _, field := range fields {
+			found := false
+			for _, required := range schema.Required {
+				if required == field {
+					found = true
+				}
+			}
+			if _, exists := schema.Properties[field]; !found || !exists {
+				t.Errorf("%s.%s must be present and required", name, field)
+			}
+		}
+	}
+	for _, name := range []string{"OfferRequest", "Offer"} {
+		outcome := doc.Components.Schemas[name].Properties["outcome"].Enum
+		if len(outcome) != 3 || outcome[0] != "HOME" || outcome[1] != "DRAW" || outcome[2] != "AWAY" {
+			t.Errorf("%s outcomes: %v", name, outcome)
+		}
+	}
+	offer := doc.Components.Schemas["Offer"].Properties
+	if offer["odds"].Type != "string" || offer["expiresAt"].Type != "string" || offer["expiresAt"].Format != "date-time" {
+		t.Error("offer odds must be a string and expiresAt a date-time")
 	}
 
 	schemas := doc.Components.Schemas

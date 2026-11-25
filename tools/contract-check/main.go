@@ -42,5 +42,14 @@ func main() {
 		flusher.Flush()
 		<-r.Context().Done()
 	})
+	mux.HandleFunc("POST /api/v1/line/offers", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(map[string]string{
+			"offerId": "offer-1", "matchId": "match-1", "outcome": "HOME",
+			"odds": "2.10", "expiresAt": "2030-01-01T00:01:00Z",
+		}); err != nil {
+			log.Printf("write offer: %v", err)
+		}
+	})
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

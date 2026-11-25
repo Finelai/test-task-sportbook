@@ -44,10 +44,53 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/line/offers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Получить предложение для исхода
+     * @description Возвращает предложение для выбранного матча и исхода. Его срок действия
+     *     и правила замены проверяются сервисом Линии.
+     */
+    post: operations["createOffer"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    OfferRequest: {
+      /** @example match-1 */
+      matchId: string;
+      /** @enum {string} */
+      outcome: "HOME" | "DRAW" | "AWAY";
+    };
+    Offer: {
+      /** @example offer-1 */
+      offerId: string;
+      /** @example match-1 */
+      matchId: string;
+      /** @enum {string} */
+      outcome: "HOME" | "DRAW" | "AWAY";
+      /** @example 2.10 */
+      odds: string;
+      /**
+       * Format: date-time
+       * @description Время окончания действия в UTC
+       * @example 2030-01-01T00:01:00Z
+       */
+      expiresAt: string;
+    };
     LineSnapshot: {
       /** Format: int64 */
       version: number;
@@ -165,6 +208,90 @@ export interface operations {
           "text/event-stream":
             | components["schemas"]["LineSnapshot"]
             | components["schemas"]["MatchUpdated"];
+        };
+      };
+    };
+  };
+  createOffer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *       "matchId": "match-1",
+         *       "outcome": "HOME"
+         *     }
+         */
+        "application/json": components["schemas"]["OfferRequest"];
+      };
+    };
+    responses: {
+      /** @description Предложение */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "offerId": "offer-1",
+           *       "matchId": "match-1",
+           *       "outcome": "HOME",
+           *       "odds": "2.10",
+           *       "expiresAt": "2030-01-01T00:01:00Z"
+           *     }
+           */
+          "application/json": components["schemas"]["Offer"];
+        };
+      };
+      /** @description Некорректный запрос */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "invalid_request",
+           *       "message": "Invalid request"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Рынок закрыт */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "market_closed",
+           *       "message": "Market is closed"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
+        };
+      };
+      /** @description Линия временно недоступна */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "code": "unavailable",
+           *       "message": "Line is temporarily unavailable"
+           *     }
+           */
+          "application/json": components["schemas"]["Error"];
         };
       };
     };

@@ -64,8 +64,63 @@ paths:
                     event: match_updated
                     data: {"version":2,"match":{"matchId":"match-1","homeTeam":"Home FC","awayTeam":"Away FC","open":true,"quotes":[{"outcome":"HOME","odds":"2.20"},{"outcome":"DRAW","odds":"3.20"},{"outcome":"AWAY","odds":"3.50"}]}}
 
+  /api/v1/line/offers:
+    post:
+      summary: Получить предложение для исхода
+      description: |
+        Возвращает предложение для выбранного матча и исхода. Его срок действия
+        и правила замены проверяются сервисом Линии.
+      operationId: createOffer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferRequest'
+            example: {matchId: match-1, outcome: HOME}
+      responses:
+        '200':
+          description: Предложение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+              example: {offerId: offer-1, matchId: match-1, outcome: HOME, odds: '2.10', expiresAt: '2030-01-01T00:01:00Z'}
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: invalid_request, message: Invalid request}
+        '409':
+          description: Рынок закрыт
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: market_closed, message: Market is closed}
+        '503':
+          description: Линия временно недоступна
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+              example: {code: unavailable, message: Line is temporarily unavailable}
 components:
   schemas:
+    OfferRequest:
+      type: object
+      required: [matchId, outcome]
+      properties:
+        matchId: {type: string, example: match-1}
+        outcome: {type: string, enum: [HOME, DRAW, AWAY]}
+    Offer:
+      type: object
+      required: [offerId, matchId, outcome, odds, expiresAt]
+      properties:
+        offerId: {type: string, example: offer-1}
+        matchId: {type: string, example: match-1}
+        outcome: {type: string, enum: [HOME, DRAW, AWAY]}
+        odds: {type: string, example: '2.10'}
+        expiresAt: {type: string, format: date-time, description: Время окончания действия в UTC, example: '2030-01-01T00:01:00Z'}
     LineSnapshot:
       type: object
       required: [version, matches]
