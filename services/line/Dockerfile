@@ -3,6 +3,7 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY services/line ./services/line
+COPY contracts/generated/line ./contracts/generated/line
 RUN CGO_ENABLED=0 go build -o /line ./services/line/cmd/server
 FROM alpine:3.23
 COPY --from=build /line /line

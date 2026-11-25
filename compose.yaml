@@ -54,6 +54,8 @@ services:
 
   line:
     profiles: [line-check]
+    ports:
+      - "127.0.0.1:9092:9092"
     build:
       context: .
       dockerfile: services/line/Dockerfile

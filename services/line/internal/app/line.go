@@ -27,12 +27,14 @@ type Snapshot struct {
 	Matches []Match `json:"matches"`
 }
 type State struct {
-	Version      int64             `json:"version"`
-	Markets      [8]domain.Market  `json:"markets"`
-	Published    [8]Published      `json:"published"`
-	Initialized  bool              `json:"initialized"`
-	Offers       map[string]Offer  `json:"offers,omitempty"`
-	ActiveOffers map[string]string `json:"activeOffers,omitempty"`
+	Version       int64                   `json:"version"`
+	Markets       [8]domain.Market        `json:"markets"`
+	Published     [8]Published            `json:"published"`
+	Initialized   bool                    `json:"initialized"`
+	Offers        map[string]Offer        `json:"offers,omitempty"`
+	ActiveOffers  map[string]string       `json:"activeOffers,omitempty"`
+	Confirmations map[string]Confirmation `json:"confirmations,omitempty"`
+	UsedOffers    map[string]string       `json:"usedOffers,omitempty"`
 }
 type Published struct {
 	Open bool           `json:"open"`

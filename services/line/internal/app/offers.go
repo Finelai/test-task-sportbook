@@ -67,7 +67,7 @@ func (s *Service) issueOffer(ctx context.Context, player, matchID, outcome strin
 		if st.ActiveOffers == nil {
 			st.ActiveOffers = make(map[string]string)
 		}
-		key := fmt.Sprintf("%d:%s:%s:%s", len(player), player, matchID, outcome)
+		key := offerKey(player, matchID, outcome)
 		odds := st.Published[index].Odds[outcomeIndex]
 		if id := st.ActiveOffers[key]; id != "" {
 			old := st.Offers[id]
@@ -75,7 +75,7 @@ func (s *Service) issueOffer(ctx context.Context, player, matchID, outcome strin
 			if diff < 0 {
 				diff = -diff
 			}
-			if now.Before(old.ExpiresAt) && diff <= 100 {
+			if now.Before(old.ExpiresAt) && diff <= 100 && st.UsedOffers[id] == "" {
 				result = old
 				return nil
 			}
@@ -90,4 +90,8 @@ func (s *Service) issueOffer(ctx context.Context, player, matchID, outcome strin
 		return nil
 	})
 	return result, err
+}
+
+func offerKey(player, matchID, outcome string) string {
+	return fmt.Sprintf("%d:%s:%s:%s", len(player), player, matchID, outcome)
 }

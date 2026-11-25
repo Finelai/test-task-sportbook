@@ -3,15 +3,19 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	linev1 "github.com/finelai/test-task-sportbook/contracts/generated/line/v1"
 	"github.com/finelai/test-task-sportbook/services/line/internal/app"
 	"github.com/finelai/test-task-sportbook/services/line/internal/httpapi"
 	"github.com/finelai/test-task-sportbook/services/line/internal/postgres"
+	"github.com/finelai/test-task-sportbook/services/line/internal/rpc"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -64,6 +68,19 @@ func main() {
 		}
 	}()
 
+	listener, err := net.Listen("tcp", ":9092")
+	if err != nil {
+		log.Fatal(err)
+	}
+	grpcServer := grpc.NewServer()
+	linev1.RegisterLineServiceServer(grpcServer, rpc.New(service))
+	go func() {
+		if err := grpcServer.Serve(listener); err != nil {
+			log.Printf("grpc server: %v", err)
+			stop()
+		}
+	}()
+	go func() { <-ctx.Done(); grpcServer.Stop() }()
 	server := &http.Server{Addr: ":8081", Handler: httpapi.New(service, store), ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
