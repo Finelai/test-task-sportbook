@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package line.v1;
+
+option go_package = "github.com/finelai/test-task-sportbook/contracts/generated/line/v1;linev1";
+
+// Transient and network failures are returned as gRPC status errors.
+service LineService {
+  rpc ConfirmOffer(ConfirmOfferRequest) returns (ConfirmOfferResponse);
+}
+
+message ConfirmOfferRequest {
+  string bet_id = 1;
+  string player_id = 2;
+  string offer_id = 3;
+  int64 expected_odds_hundredths = 4;
+}
+
+message ConfirmOfferResponse {
+  oneof result {
+    ConfirmedOffer confirmed = 1;
+    RejectedOffer rejected = 2;
+  }
+}
+
+message ConfirmedOffer {
+  string match_id = 1;
+  Outcome outcome = 2;
+  int64 odds_hundredths = 3;
+}
+
+enum Outcome {
+  OUTCOME_UNSPECIFIED = 0;
+  HOME = 1;
+  DRAW = 2;
+  AWAY = 3;
+}
+
+message RejectedOffer {
+  RejectionReason reason = 1;
+}
+
+enum RejectionReason {
+  REJECTION_REASON_UNSPECIFIED = 0;
+  OFFER_EXPIRED = 1;
+  ODDS_CHANGED = 2;
+  OFFER_UNAVAILABLE = 3;
+  OFFER_MISMATCH = 4;
+  MARKET_CLOSED = 5;
+}

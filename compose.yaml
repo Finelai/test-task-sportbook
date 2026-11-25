@@ -26,6 +26,14 @@ services:
       context: .
       dockerfile: tools/contract-check/Dockerfile
 
+  contract-check-grpc:
+    profiles: [contract-check]
+    build:
+      context: .
+      dockerfile: tools/contract-check-grpc/Dockerfile
+    ports:
+      - "9091:9091"
+
   swagger-ui:
     profiles: [contract-check]
     image: swaggerapi/swagger-ui:v5.30.3

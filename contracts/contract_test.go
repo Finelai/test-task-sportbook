@@ -76,4 +76,5 @@ func TestPublishedContracts(t *testing.T) {
 	t.Run("get_bet", func(t *testing.T) { testGetBet(t, doc) })
 	t.Run("get_wallet", func(t *testing.T) { testGetWallet(t, doc) })
 	t.Run("credit_wallet", func(t *testing.T) { testCreditWallet(t, doc) })
+	t.Run("line_grpc", testLineGRPCContract)
 }

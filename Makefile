@@ -28,7 +28,21 @@ lint-web:
 	npm --prefix apps/web run lint
 	npm --prefix apps/web run format:check
 
-generate:
+PROTOC_GEN_GO := .bin/protoc-gen-go-v1.36.12
+PROTOC_GEN_GO_GRPC := .bin/protoc-gen-go-grpc-v1.5.1
+
+$(PROTOC_GEN_GO):
+	mkdir -p .bin
+	GOBIN="$(CURDIR)/.bin" go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+	mv .bin/protoc-gen-go $@
+
+$(PROTOC_GEN_GO_GRPC):
+	mkdir -p .bin
+	GOBIN="$(CURDIR)/.bin" go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+	mv .bin/protoc-gen-go-grpc $@
+
+generate: $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC)
+	cd contracts/proto && ../../apps/web/node_modules/.bin/buf generate
 	npm --prefix apps/web exec -- openapi-typescript contracts/openapi/v1.yaml -o apps/web/src/shared/api/generated/openapi.ts
 	npm --prefix apps/web exec -- prettier --write apps/web/src/shared/api/generated/openapi.ts
 
