@@ -21,7 +21,7 @@ services:
       retries: 12
 
   contract-check:
-    profiles: [contract-check]
+    profiles: [contract-check, line-check]
     build:
       context: .
       dockerfile: tools/contract-check/Dockerfile
@@ -35,7 +35,7 @@ services:
       - "9091:9091"
 
   swagger-ui:
-    profiles: [contract-check]
+    profiles: [contract-check, line-check]
     image: swaggerapi/swagger-ui:v5.30.3
     environment:
       SWAGGER_JSON_URL: /docs/openapi.yaml
@@ -51,6 +51,38 @@ services:
     depends_on:
       - contract-check
       - swagger-ui
+
+  line:
+    profiles: [line-check]
+    build:
+      context: .
+      dockerfile: services/line/Dockerfile
+    environment:
+      DATABASE_URL: postgres://line:${LINE_DB_PASSWORD:-line}@postgres:5432/line?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  nginx-line:
+    profiles: [line-check]
+    image: nginx:1.29.4-alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/nginx-line:/etc/nginx/conf.d:ro
+      - ./contracts/openapi:/etc/nginx/contracts:ro
+    depends_on:
+      line:
+        condition: service_healthy
+      contract-check:
+        condition: service_started
+      swagger-ui:
+        condition: service_started
 
 volumes:
   postgres_data:
