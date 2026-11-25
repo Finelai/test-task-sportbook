@@ -1,0 +1,24 @@
+name: mini-sportsbook
+
+services:
+  postgres:
+    image: postgres:17.7-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      LINE_DB_PASSWORD: ${LINE_DB_PASSWORD:-line}
+      WALLET_DB_PASSWORD: ${WALLET_DB_PASSWORD:-wallet}
+      BETS_DB_PASSWORD: ${BETS_DB_PASSWORD:-bets}
+      BUILD_METRICS_DB_PASSWORD: ${BUILD_METRICS_DB_PASSWORD:-build_metrics}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sh:/docker-entrypoint-initdb.d/10-sportsbook.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  postgres_data:

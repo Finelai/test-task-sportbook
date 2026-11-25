@@ -1,0 +1,23 @@
+# Local settings and credentials
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Go binaries and test output
+/.bin/
+/bin/
+*.test
+/coverage.out
+
+# Frontend dependencies, build and test output
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Local plan execution state
+/.superpowers/

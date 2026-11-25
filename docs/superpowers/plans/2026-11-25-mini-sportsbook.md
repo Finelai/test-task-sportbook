@@ -52,13 +52,13 @@
 
 **Выход:** цели `make lint`, `make generate`, `make test`, `make test-integration` и `make test-e2e`. Последнюю подключить при появлении набора в задаче 6. `make test-integration` запускает тесты с тегом `integration` и Testcontainers.
 
-- [ ] Добавить проверки границ. Импорт исходников одного сервиса из другого и импорт адаптера из домена отклоняются. Во фронтенде импорт вверх по FSD и импорт чужого слайса мимо `index.ts` отклоняются. Проверить правила на положительных и отрицательных фикстурах.
-- [ ] Запустить проверки на отрицательных фикстурах до включения правил. Ожидание — тест падает, потому что запрещённый импорт пока проходит.
-- [ ] Настроить один Go-модуль, `gofmt`, `golangci-lint` с `errcheck`, `govet`, `staticcheck`, `ineffassign` и `unused`. Зафиксировать версии инструментов и способ их запуска.
-- [ ] Настроить Vue/Vite, Tailwind, TypeScript `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `vue-tsc --noEmit`, ESLint с типовой информацией и `--max-warnings=0`, Prettier `--check`.
-- [ ] Поднять PostgreSQL с базами `line`, `wallet`, `bets`, `build_metrics` и отдельными ролями. Проверить, что роль сервиса подключается к своей базе и получает отказ при подключении к чужой. Отозвать право `CONNECT` через `PUBLIC`. Для БД настроить healthcheck Compose.
-- [ ] Запустить `make lint`, `make test` и `docker compose config -q`. Ожидание — код 0, отрицательные фикстуры отклонены предусмотренным правилом.
-- [ ] Создать коммит `chore: scaffold sportsbook workspace`.
+- [x] Добавить проверки границ. Импорт исходников одного сервиса из другого и импорт адаптера из домена отклоняются. Во фронтенде импорт вверх по FSD и импорт чужого слайса мимо `index.ts` отклоняются. Проверить правила на положительных и отрицательных фикстурах.
+- [x] Запустить проверки на отрицательных фикстурах до включения правил. Ожидание — тест падает, потому что запрещённый импорт пока проходит.
+- [x] Настроить один Go-модуль, `gofmt`, `golangci-lint` с `errcheck`, `govet`, `staticcheck`, `ineffassign` и `unused`. Зафиксировать версии инструментов и способ их запуска.
+- [x] Настроить Vue/Vite, Tailwind, TypeScript `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `vue-tsc --noEmit`, ESLint с типовой информацией и `--max-warnings=0`, Prettier `--check`.
+- [x] Поднять PostgreSQL с базами `line`, `wallet`, `bets`, `build_metrics` и отдельными ролями. Проверить, что роль сервиса подключается к своей базе и получает отказ при подключении к чужой. Отозвать право `CONNECT` через `PUBLIC`. Для БД настроить healthcheck Compose.
+- [x] Запустить `make lint`, `make test` и `docker compose config -q`. Ожидание — код 0, отрицательные фикстуры отклонены предусмотренным правилом.
+- [x] Создать коммит `chore: scaffold sportsbook workspace`.
 
 ## Задача 2. Контракты и Swagger
 
