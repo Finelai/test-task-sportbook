@@ -62,6 +62,8 @@
 
 ## Задача 2. Контракты и Swagger
 
+**Статус:** реализована; изменения сохранены серией коммитов до `a29f4ab`.
+
 **Файлы:** `contracts/openapi/v1.yaml`, `contracts/proto/line/v1/line.proto`, `contracts/proto/wallet/v1/wallet.proto`, `contracts/contract_test.go`, `infra/nginx/default.conf`, `compose.yaml`.
 
 **Выход:** HTTP использует префикс `/api/v1`. POST на пополнение и ставку принимает заголовок `Idempotency-Key`. Даты в HTTP — UTC RFC 3339. Swagger UI доступен на `/docs/`, YAML — на `/docs/openapi.yaml`. У каждого сервиса есть внутренние `/healthz`, `/readyz` и впоследствии `/metrics`. Готовность требует успешных миграций и доступности собственной БД.
@@ -87,6 +89,8 @@
 - [ ] Создать коммит `feat: define public and internal API contracts`.
 
 ## Задача 3. Линия, SSE и гарантия цены
+
+**Детальный план:** [этапы реализации и ручные проверки](2026-11-25-task-3-line.md).
 
 **Файлы:** `services/line/internal/domain/pricing.go`, `services/line/internal/app/{line.go,offers.go}`, `services/line/internal/httpapi/events.go`, `services/line/internal/rpc/confirm_offer.go`, `services/line/migrations/001_line.sql`, `services/line/queries/line.sql`. Тесты рядом с кодом и в `services/line/integration/line_test.go`.
 
