@@ -25,3 +25,15 @@ docker compose --profile wallet-check config -q
 ## Проверка пополнения
 
 Пересоберите существующий проект `wallet-manual` той же командой `docker compose -p wallet-manual --profile wallet-check up --build -d`. В Swagger выполните `POST /api/v1/wallet/credits` с заголовком `Idempotency-Key: manual-credit-1` и телом `{"amount":"10.00"}`. Повтор запроса возвращает тот же `operationId` и баланс `10.00`. Повтор с суммой `11.00` возвращает `409`, а запрос с новым ключом и суммой `1.001` — `400`. Проверьте баланс и восемь матчей Line, затем перезапустите Wallet и убедитесь, что баланс сохранился. Маршрут пополнения направлен в Wallet, ставки остаются на контрактной заглушке.
+
+## Проверка резервирования
+
+Пересоберите существующий стенд командой `docker compose -p wallet-manual --profile wallet-check up --build -d`. После пополнения на `10.00` выполните:
+
+```sh
+grpcurl -plaintext -import-path contracts/proto -proto wallet/v1/wallet.proto \
+  -d '{"betId":"manual-bet-1","playerId":"player-1","amountMinor":"300"}' \
+  localhost:9093 wallet.v1.WalletService/Reserve
+```
+
+Ожидается `RESERVED`. Повтор вызова сохраняет результат, а баланс в Swagger равен `available: "7.00"`, `reserved: "3.00"`. Повтор с `amountMinor: "400"` возвращает `PARAMETER_CONFLICT`. Сохраните стенд и резерв для следующего этапа. gRPC доступен на `127.0.0.1:9093` только в профиле `wallet-check`.

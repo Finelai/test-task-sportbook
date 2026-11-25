@@ -88,6 +88,8 @@ services:
 
   wallet:
     profiles: [wallet-check]
+    ports:
+      - "127.0.0.1:9093:9093"
     build:
       context: .
       dockerfile: services/wallet/Dockerfile

@@ -93,3 +93,59 @@ func (s *Store) Credit(ctx context.Context, player, key string, amount int64) (a
 	}
 	return result, nil
 }
+
+func (s *Store) Reserve(ctx context.Context, bet, player string, amount int64) (app.ReserveResult, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	// A bet ID is globally unique, including when competing players use it.
+	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, bet); err != nil {
+		return 0, err
+	}
+	var previousPlayer, previousResult string
+	var previousAmount int64
+	err = tx.QueryRow(ctx, `SELECT player_id,amount,result FROM wallet_reserves WHERE bet_id=$1`, bet).Scan(&previousPlayer, &previousAmount, &previousResult)
+	if err == nil {
+		if previousPlayer != player || previousAmount != amount {
+			return app.ParameterConflict, nil
+		}
+		if previousResult == "reserved" {
+			return app.Reserved, nil
+		}
+		return app.InsufficientFunds, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return 0, err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO wallets(player_id) VALUES ($1) ON CONFLICT DO NOTHING`, player); err != nil {
+		return 0, err
+	}
+	var available, reserved int64
+	if err = tx.QueryRow(ctx, `SELECT available,reserved FROM wallets WHERE player_id=$1 FOR UPDATE`, player).Scan(&available, &reserved); err != nil {
+		return 0, err
+	}
+	result := app.InsufficientFunds
+	stored := "insufficient_funds"
+	if available >= amount {
+		if amount <= 0 || reserved > math.MaxInt64-amount {
+			return 0, errors.New("invalid wallet balance")
+		}
+		if _, err = tx.Exec(ctx, `UPDATE wallets SET available=available-$2,reserved=reserved+$2 WHERE player_id=$1`, player, amount); err != nil {
+			return 0, err
+		}
+		if _, err = tx.Exec(ctx, `INSERT INTO wallet_journal(player_id,operation,amount) VALUES ($1,'reserve',$2)`, player, amount); err != nil {
+			return 0, err
+		}
+		result = app.Reserved
+		stored = "reserved"
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO wallet_reserves(bet_id,player_id,amount,result) VALUES ($1,$2,$3,$4)`, bet, player, amount, stored); err != nil {
+		return 0, err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+	return result, nil
+}
