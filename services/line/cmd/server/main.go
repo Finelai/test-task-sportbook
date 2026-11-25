@@ -49,6 +49,21 @@ func main() {
 			}
 		}()
 	}
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case now := <-ticker.C:
+				if err := service.Refresh(ctx, now); err != nil && ctx.Err() == nil {
+					log.Printf("refresh: %v", err)
+				}
+			}
+		}
+	}()
+
 	server := &http.Server{Addr: ":8081", Handler: httpapi.New(service, store), ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()

@@ -76,6 +76,25 @@ func TestSnapshot(t *testing.T) {
 	if err = json.Unmarshal(request("/api/v1/line").Body.Bytes(), &next); err != nil || next.Version <= snapshot.Version {
 		t.Fatalf("version: %d -> %d, %v", snapshot.Version, next.Version, err)
 	}
+
+	sub, err := service.Subscribe(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sub.Close()
+	if err = service.Generate(ctx, 1, time.Now(), 30); err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 8; i++ {
+		select {
+		case event := <-sub.Events:
+			if event.Version != sub.Snapshot.Version+int64(i+1) {
+				t.Fatalf("event version: %d", event.Version)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("missing persisted update")
+		}
+	}
 	store.Close()
 	r = request("/api/v1/line")
 	if r.Code != 503 {

@@ -70,11 +70,11 @@ services:
 
   nginx-line:
     profiles: [line-check]
-    image: nginx:1.29.4-alpine
+    build:
+      context: ./infra/nginx-line
     ports:
       - "8080:8080"
     volumes:
-      - ./infra/nginx-line:/etc/nginx/conf.d:ro
       - ./contracts/openapi:/etc/nginx/contracts:ro
     depends_on:
       line:
