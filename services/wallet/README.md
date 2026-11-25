@@ -51,3 +51,27 @@ docker run --rm --network container:wallet-manual-wallet-1 \
 ```
 
 Ответ — `CAPTURED`. Повторите вызов: ответ не изменится. В Swagger проверьте `GET /api/v1/wallet`: `available: "7.00"`, `reserved: "0.00"`. Для отсутствующего или отклонённого резерва Capture возвращает gRPC `NotFound`; неверный идентификатор — `InvalidArgument`.
+
+## Проверка освобождения резерва
+
+Пересоберите сохранённый стенд: `docker compose -p wallet-manual --profile wallet-check up --build -d`. Из корня репозитория создайте резерв на `2.00`:
+
+```sh
+docker run --rm --network container:wallet-manual-wallet-1 \
+  -v "$PWD/contracts/proto:/protos:ro" fullstorydev/grpcurl:latest \
+  -plaintext -import-path /protos -proto wallet/v1/wallet.proto \
+  -d '{"betId":"manual-bet-2","playerId":"player-1","amountMinor":"200"}' \
+  localhost:9093 wallet.v1.WalletService/Reserve
+```
+
+Ожидается `RESERVED`, баланс — `5.00` и `2.00`. Освободите резерв:
+
+```sh
+docker run --rm --network container:wallet-manual-wallet-1 \
+  -v "$PWD/contracts/proto:/protos:ro" fullstorydev/grpcurl:latest \
+  -plaintext -import-path /protos -proto wallet/v1/wallet.proto \
+  -d '{"betId":"manual-bet-2","playerId":"player-1"}' \
+  localhost:9093 wallet.v1.WalletService/Release
+```
+
+Оба вызова Release возвращают `RELEASED`; баланс — `7.00` и `0.00`. Release для списанного `manual-bet-1` возвращает `ALREADY_CAPTURED`, а Capture для освобождённого `manual-bet-2` — `ALREADY_RELEASED`. Для отсутствующего или отклонённого резерва Release возвращает gRPC `NotFound`. По окончании можно остановить стенд командой `docker compose -p wallet-manual --profile wallet-check down`; том сохранится.

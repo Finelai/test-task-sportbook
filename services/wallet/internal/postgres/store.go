@@ -209,3 +209,63 @@ func (s *Store) Capture(ctx context.Context, bet, player string) (app.CaptureRes
 	}
 	return app.Captured, nil
 }
+
+// Release locks the bet, wallet and reserve row in the same order as Capture.
+func (s *Store) Release(ctx context.Context, bet, player string) (app.ReleaseResult, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, bet); err != nil {
+		return 0, err
+	}
+	var owner, result string
+	err = tx.QueryRow(ctx, `SELECT player_id,result FROM wallet_reserves WHERE bet_id=$1`, bet).Scan(&owner, &result)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, app.ErrReserveNotFound
+	}
+	if err != nil {
+		return 0, err
+	}
+	if owner != player {
+		return app.ReleaseParameterConflict, nil
+	}
+	if result != "reserved" {
+		return 0, app.ErrReserveNotFound
+	}
+	var available, reserved int64
+	if err = tx.QueryRow(ctx, `SELECT available,reserved FROM wallets WHERE player_id=$1 FOR UPDATE`, owner).Scan(&available, &reserved); err != nil {
+		return 0, err
+	}
+	var amount int64
+	var state string
+	if err = tx.QueryRow(ctx, `SELECT amount,state FROM wallet_reserves WHERE bet_id=$1 FOR UPDATE`, bet).Scan(&amount, &state); err != nil {
+		return 0, err
+	}
+	switch state {
+	case "released":
+		return app.Released, nil
+	case "captured":
+		return app.AlreadyCaptured, nil
+	case "reserved":
+	default:
+		return 0, errors.New("invalid reserve state")
+	}
+	if reserved < amount || available > math.MaxInt64-amount {
+		return 0, errors.New("invalid wallet balance")
+	}
+	if _, err = tx.Exec(ctx, `UPDATE wallets SET reserved=reserved-$2,available=available+$2 WHERE player_id=$1`, owner, amount); err != nil {
+		return 0, err
+	}
+	if _, err = tx.Exec(ctx, `UPDATE wallet_reserves SET state='released' WHERE bet_id=$1`, bet); err != nil {
+		return 0, err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO wallet_journal(player_id,operation,amount) VALUES ($1,'release',$2)`, owner, amount); err != nil {
+		return 0, err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+	return app.Released, nil
+}

@@ -68,4 +68,14 @@ func TestWalletCreditReserveCaptureFlow(t *testing.T) {
 		t.Fatalf("capture: %v %v", captured, err)
 	}
 	checkBalance("7.00", "0.00")
+	reserved, err = client.Reserve(ctx, &walletv1.ReserveRequest{BetId: "flow-release", PlayerId: "player-1", AmountMinor: 200})
+	if err != nil || reserved.GetResult() != walletv1.ReserveResult_RESERVED {
+		t.Fatalf("reserve for release: %v %v", reserved, err)
+	}
+	checkBalance("5.00", "2.00")
+	released, err := client.Release(ctx, &walletv1.ReserveKey{BetId: "flow-release", PlayerId: "player-1"})
+	if err != nil || released.GetResult() != walletv1.ReleaseResult_RELEASED {
+		t.Fatalf("release: %v %v", released, err)
+	}
+	checkBalance("7.00", "0.00")
 }

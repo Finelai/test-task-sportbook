@@ -14,6 +14,7 @@ import (
 type Store interface {
 	Reserve(context.Context, string, string, int64) (app.ReserveResult, error)
 	Capture(context.Context, string, string) (app.CaptureResult, error)
+	Release(context.Context, string, string) (app.ReleaseResult, error)
 }
 type Server struct {
 	walletv1.UnimplementedWalletServiceServer
@@ -67,5 +68,31 @@ func (s *Server) Capture(ctx context.Context, key *walletv1.ReserveKey) (*wallet
 		return &walletv1.CaptureResponse{Result: walletv1.CaptureResult_ALREADY_RELEASED}, nil
 	default:
 		return nil, status.Error(codes.Internal, "unknown capture result")
+	}
+}
+
+func (s *Server) Release(ctx context.Context, key *walletv1.ReserveKey) (*walletv1.ReleaseResponse, error) {
+	if key == nil || strings.TrimSpace(key.BetId) == "" || strings.TrimSpace(key.PlayerId) == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid reserve key")
+	}
+	result, err := s.store.Release(ctx, key.BetId, key.PlayerId)
+	if errors.Is(err, app.ErrReserveNotFound) {
+		return nil, status.Error(codes.NotFound, "reserve not found")
+	}
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil, status.FromContextError(ctx.Err()).Err()
+		}
+		return nil, status.Error(codes.Unavailable, "wallet temporarily unavailable")
+	}
+	switch result {
+	case app.Released:
+		return &walletv1.ReleaseResponse{Result: walletv1.ReleaseResult_RELEASED}, nil
+	case app.ReleaseParameterConflict:
+		return &walletv1.ReleaseResponse{Result: walletv1.ReleaseResult_RELEASE_PARAMETER_CONFLICT}, nil
+	case app.AlreadyCaptured:
+		return &walletv1.ReleaseResponse{Result: walletv1.ReleaseResult_ALREADY_CAPTURED}, nil
+	default:
+		return nil, status.Error(codes.Internal, "unknown release result")
 	}
 }
