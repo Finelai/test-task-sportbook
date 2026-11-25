@@ -8,6 +8,16 @@ permissions:
   contents: read
 
 jobs:
+  branch-name:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check pull request branch name
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: sh tools/git-hooks/check-branch-name.sh "$BRANCH_NAME"
+
   check:
     runs-on: ubuntu-latest
     steps:

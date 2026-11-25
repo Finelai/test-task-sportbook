@@ -2,7 +2,14 @@ GOLANGCI_LINT_VERSION := v2.15.0
 GOLANGCI_LINT := .bin/golangci-lint-$(GOLANGCI_LINT_VERSION)
 export GOTOOLCHAIN ?= go$(shell cat .go-version)
 
-.PHONY: lint lint-go lint-web generate test test-integration test-e2e
+.PHONY: lint lint-go lint-web generate test test-integration test-e2e install-hooks test-hooks
+
+install-hooks:
+	git config --local core.hooksPath .githooks
+
+test-hooks:
+	sh tools/git-hooks/test-commit-msg.sh
+	sh tools/git-hooks/test-branch-name.sh
 
 lint: lint-go lint-web
 
