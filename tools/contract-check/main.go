@@ -3,6 +3,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -20,6 +21,26 @@ func main() {
 		}); err != nil {
 			log.Printf("write snapshot: %v", err)
 		}
+	})
+	mux.HandleFunc("GET /api/v1/line/events", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+			return
+		}
+		_, err := fmt.Fprint(w, "event: snapshot\ndata: {\"version\":1,\"matches\":[{\"matchId\":\"match-1\",\"homeTeam\":\"Home FC\",\"awayTeam\":\"Away FC\",\"open\":true,\"quotes\":[{\"outcome\":\"HOME\",\"odds\":\"2.10\"},{\"outcome\":\"DRAW\",\"odds\":\"3.20\"},{\"outcome\":\"AWAY\",\"odds\":\"3.50\"}]}]}\n\n")
+		if err != nil {
+			return
+		}
+		flusher.Flush()
+		_, err = fmt.Fprint(w, "event: match_updated\ndata: {\"version\":2,\"match\":{\"matchId\":\"match-1\",\"homeTeam\":\"Home FC\",\"awayTeam\":\"Away FC\",\"open\":true,\"quotes\":[{\"outcome\":\"HOME\",\"odds\":\"2.20\"},{\"outcome\":\"DRAW\",\"odds\":\"3.20\"},{\"outcome\":\"AWAY\",\"odds\":\"3.50\"}]}}\n\n")
+		if err != nil {
+			return
+		}
+		flusher.Flush()
+		<-r.Context().Done()
 	})
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

@@ -33,6 +33,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
               example: {code: unavailable, message: Line is temporarily unavailable}
+  /api/v1/line/events:
+    get:
+      summary: Подписаться на обновления линии
+      description: |
+        Поток SSE отправляет событие snapshot с полным снимком при каждом
+        подключении и переподключении, затем события match_updated с полным
+        состоянием изменённого матча. Клиент заменяет локальный снимок при
+        получении snapshot.
+      operationId: getLineEvents
+      responses:
+        '200':
+          description: Поток событий snapshot и match_updated
+          content:
+            text/event-stream:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/LineSnapshot'
+                  - $ref: '#/components/schemas/MatchUpdated'
+              examples:
+                snapshot:
+                  summary: Начальный полный снимок
+                  value: |
+                    event: snapshot
+                    data: {"version":1,"matches":[{"matchId":"match-1","homeTeam":"Home FC","awayTeam":"Away FC","open":true,"quotes":[{"outcome":"HOME","odds":"2.10"},{"outcome":"DRAW","odds":"3.20"},{"outcome":"AWAY","odds":"3.50"}]}]}
+
+                match_updated:
+                  summary: Полное состояние изменённого матча
+                  value: |
+                    event: match_updated
+                    data: {"version":2,"match":{"matchId":"match-1","homeTeam":"Home FC","awayTeam":"Away FC","open":true,"quotes":[{"outcome":"HOME","odds":"2.20"},{"outcome":"DRAW","odds":"3.20"},{"outcome":"AWAY","odds":"3.50"}]}}
+
 components:
   schemas:
     LineSnapshot:
@@ -43,6 +74,12 @@ components:
         matches:
           type: array
           items: {$ref: '#/components/schemas/Match'}
+    MatchUpdated:
+      type: object
+      required: [version, match]
+      properties:
+        version: {type: integer, format: int64, minimum: 0}
+        match: {$ref: "#/components/schemas/Match"}
     Match:
       type: object
       required: [matchId, homeTeam, awayTeam, open, quotes]

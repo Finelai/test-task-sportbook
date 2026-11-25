@@ -17,7 +17,10 @@ func TestPublishedContracts(t *testing.T) {
 			Responses map[string]struct {
 				Content map[string]struct {
 					Schema struct {
-						Ref string `yaml:"$ref"`
+						Ref   string `yaml:"$ref"`
+						OneOf []struct {
+							Ref string `yaml:"$ref"`
+						} `yaml:"oneOf"`
 					} `yaml:"schema"`
 				} `yaml:"content"`
 			} `yaml:"responses"`
@@ -26,6 +29,7 @@ func TestPublishedContracts(t *testing.T) {
 			Schemas map[string]struct {
 				Required   []string `yaml:"required"`
 				Properties map[string]struct {
+					Ref   string   `yaml:"$ref"`
 					Type  string   `yaml:"type"`
 					Enum  []string `yaml:"enum"`
 					Items struct {
@@ -73,6 +77,30 @@ func TestPublishedContracts(t *testing.T) {
 			}
 		}
 	}
+	events, ok := doc.Paths["/api/v1/line/events"]["get"]
+	if !ok {
+		t.Fatal("GET /api/v1/line/events missing")
+	}
+	stream, ok := events.Responses["200"].Content["text/event-stream"]
+	if !ok || len(stream.Schema.OneOf) != 2 || stream.Schema.OneOf[0].Ref != "#/components/schemas/LineSnapshot" || stream.Schema.OneOf[1].Ref != "#/components/schemas/MatchUpdated" {
+		t.Error("event stream must describe snapshot and match_updated payloads")
+	}
+	updated := doc.Components.Schemas["MatchUpdated"]
+	for _, field := range []string{"version", "match"} {
+		found := false
+		for _, required := range updated.Required {
+			if required == field {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("MatchUpdated.%s is not required", field)
+		}
+	}
+	if updated.Properties["version"].Type != "integer" || updated.Properties["match"].Ref != "#/components/schemas/Match" {
+		t.Error("match_updated must contain a version and a Match")
+	}
+
 	schemas := doc.Components.Schemas
 	if schemas["LineSnapshot"].Properties["matches"].Items.Ref != "#/components/schemas/Match" {
 		t.Error("matches must contain Match")

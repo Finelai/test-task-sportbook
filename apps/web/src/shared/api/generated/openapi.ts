@@ -21,6 +21,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/line/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Подписаться на обновления линии
+     * @description Поток SSE отправляет событие snapshot с полным снимком при каждом
+     *     подключении и переподключении, затем события match_updated с полным
+     *     состоянием изменённого матча. Клиент заменяет локальный снимок при
+     *     получении snapshot.
+     */
+    get: operations["getLineEvents"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -29,6 +52,11 @@ export interface components {
       /** Format: int64 */
       version: number;
       matches: components["schemas"]["Match"][];
+    };
+    MatchUpdated: {
+      /** Format: int64 */
+      version: number;
+      match: components["schemas"]["Match"];
     };
     Match: {
       matchId: string;
@@ -115,6 +143,28 @@ export interface operations {
            *     }
            */
           "application/json": components["schemas"]["Error"];
+        };
+      };
+    };
+  };
+  getLineEvents: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Поток событий snapshot и match_updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/event-stream":
+            | components["schemas"]["LineSnapshot"]
+            | components["schemas"]["MatchUpdated"];
         };
       };
     };
