@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"errors"
+	"github.com/finelai/test-task-sportbook/services/wallet/internal/app"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,7 +12,10 @@ import (
 type fakeStore struct{ err error }
 
 func (s fakeStore) Balance(context.Context, string) (int64, int64, error) { return 0, 0, s.err }
-func (s fakeStore) Ping(context.Context) error                            { return s.err }
+func (s fakeStore) Credit(context.Context, string, string, int64) (app.CreditResult, error) {
+	return app.CreditResult{}, s.err
+}
+func (s fakeStore) Ping(context.Context) error { return s.err }
 func TestInitialBalance(t *testing.T) {
 	h := New(fakeStore{})
 	r := httptest.NewRecorder()

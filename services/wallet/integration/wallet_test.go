@@ -51,7 +51,7 @@ func TestInitialBalance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 	var wallets, entries int
 	if err = conn.QueryRow(ctx, "SELECT (SELECT count(*) FROM wallets), (SELECT count(*) FROM wallet_journal)").Scan(&wallets, &entries); err != nil || wallets != 1 || entries != 0 {
 		t.Fatalf("wallets=%d journal=%d err=%v", wallets, entries, err)
