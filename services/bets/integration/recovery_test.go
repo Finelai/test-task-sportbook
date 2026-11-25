@@ -38,6 +38,10 @@ type systemFixture struct {
 }
 
 func system(t *testing.T) *systemFixture {
+	return systemWithLineEnv(t, nil)
+}
+
+func systemWithLineEnv(t *testing.T, lineEnv map[string]string) *systemFixture {
 	t.Helper()
 	ctx := context.Background()
 	root, err := filepath.Abs("../../..")
@@ -87,7 +91,13 @@ func system(t *testing.T) *systemFixture {
 	}
 	_ = admin.Close(ctx)
 	startService := func(name, httpPort, grpcPort string) testcontainers.Container {
-		return start(testcontainers.ContainerRequest{Image: "sportbook-integration-" + name, Env: map[string]string{"DATABASE_URL": "postgres://postgres:test@db:5432/" + name + "?sslmode=disable"}, Networks: []string{nw.Name}, ExposedPorts: []string{httpPort + "/tcp", grpcPort + "/tcp"}, WaitingFor: wait.ForHTTP("/readyz").WithPort(nat.Port(httpPort + "/tcp")).WithStartupTimeout(time.Minute)})
+		env := map[string]string{"DATABASE_URL": "postgres://postgres:test@db:5432/" + name + "?sslmode=disable"}
+		if name == "line" {
+			for key, value := range lineEnv {
+				env[key] = value
+			}
+		}
+		return start(testcontainers.ContainerRequest{Image: "sportbook-integration-" + name, Env: env, Networks: []string{nw.Name}, ExposedPorts: []string{httpPort + "/tcp", grpcPort + "/tcp"}, WaitingFor: wait.ForHTTP("/readyz").WithPort(nat.Port(httpPort + "/tcp")).WithStartupTimeout(time.Minute)})
 	}
 	line := startService("line", "8081", "9092")
 	wallet := startService("wallet", "8082", "9093")

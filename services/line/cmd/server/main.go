@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -18,7 +19,22 @@ import (
 	"google.golang.org/grpc"
 )
 
+func generationInterval(value string) (time.Duration, error) {
+	if value == "" {
+		return 5 * time.Second, nil
+	}
+	duration, err := time.ParseDuration(value)
+	if err != nil || duration <= 0 {
+		return 0, fmt.Errorf("invalid LINE_GENERATION_INTERVAL: %q", value)
+	}
+	return duration, nil
+}
+
 func main() {
+	interval, err := generationInterval(os.Getenv("LINE_GENERATION_INTERVAL"))
+	if err != nil {
+		log.Fatal(err)
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	store, err := postgres.Open(ctx, os.Getenv("DATABASE_URL"))
@@ -39,16 +55,16 @@ func main() {
 	for source := 0; source < 2; source++ {
 		source := source
 		go func() {
-			ticker := time.NewTicker(5 * time.Second)
+			ticker := time.NewTicker(interval)
 			defer ticker.Stop()
 			for {
-				if err := service.Generate(ctx, source, time.Now(), time.Now().UnixNano()+int64(source)); err != nil && ctx.Err() == nil {
-					log.Printf("generate: %v", err)
-				}
 				select {
 				case <-ctx.Done():
 					return
-				case <-ticker.C:
+				case now := <-ticker.C:
+					if err := service.Generate(ctx, source, now, now.UnixNano()+int64(source)); err != nil && ctx.Err() == nil {
+						log.Printf("generate: %v", err)
+					}
 				}
 			}
 		}()
