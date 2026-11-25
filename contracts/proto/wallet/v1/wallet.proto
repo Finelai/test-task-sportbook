@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package wallet.v1;
+
+option go_package = "github.com/finelai/test-task-sportbook/contracts/generated/wallet/v1;walletv1";
+
+// Transient and network failures are returned as gRPC status errors.
+service WalletService {
+  rpc Reserve(ReserveRequest) returns (ReserveResponse);
+}
+
+message ReserveRequest {
+  string bet_id = 1;
+  string player_id = 2;
+  int64 amount_minor = 3;
+}
+
+message ReserveResponse {
+  ReserveResult result = 1;
+}
+
+enum ReserveResult {
+  RESERVE_RESULT_UNSPECIFIED = 0;
+  RESERVED = 1;
+  INSUFFICIENT_FUNDS = 2;
+  PARAMETER_CONFLICT = 3;
+}

@@ -7,6 +7,7 @@ import (
 	"net"
 
 	linev1 "github.com/finelai/test-task-sportbook/contracts/generated/line/v1"
+	walletv1 "github.com/finelai/test-task-sportbook/contracts/generated/wallet/v1"
 	"google.golang.org/grpc"
 )
 
@@ -18,6 +19,14 @@ func (lineServer) ConfirmOffer(context.Context, *linev1.ConfirmOfferRequest) (*l
 	return &linev1.ConfirmOfferResponse{Result: &linev1.ConfirmOfferResponse_Confirmed{Confirmed: &linev1.ConfirmedOffer{MatchId: "match-1", Outcome: linev1.Outcome_HOME, OddsHundredths: 210}}}, nil
 }
 
+type walletServer struct {
+	walletv1.UnimplementedWalletServiceServer
+}
+
+func (walletServer) Reserve(context.Context, *walletv1.ReserveRequest) (*walletv1.ReserveResponse, error) {
+	return &walletv1.ReserveResponse{Result: walletv1.ReserveResult_RESERVED}, nil
+}
+
 func main() {
 	listener, err := net.Listen("tcp", ":9091")
 	if err != nil {
@@ -25,5 +34,6 @@ func main() {
 	}
 	server := grpc.NewServer()
 	linev1.RegisterLineServiceServer(server, lineServer{})
+	walletv1.RegisterWalletServiceServer(server, walletServer{})
 	log.Fatal(server.Serve(listener))
 }
