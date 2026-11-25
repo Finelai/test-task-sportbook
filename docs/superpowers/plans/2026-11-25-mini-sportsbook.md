@@ -90,6 +90,8 @@
 
 ## Задача 3. Линия, SSE и гарантия цены
 
+**Статус:** реализована; изменения сохранены коммитами до `a821005`.
+
 **Детальный план:** [этапы реализации и ручные проверки](2026-11-25-task-3-line.md).
 
 **Файлы:** `services/line/internal/domain/pricing.go`, `services/line/internal/app/{line.go,offers.go}`, `services/line/internal/httpapi/events.go`, `services/line/internal/rpc/confirm_offer.go`, `services/line/migrations/001_line.sql`, `services/line/queries/line.sql`. Тесты рядом с кодом и в `services/line/integration/line_test.go`.
@@ -106,6 +108,8 @@
 - [ ] Создать коммит `feat: publish line and guarantee offered odds`.
 
 ## Задача 4. Кошелёк и события резерва
+
+**Детальный план:** [этапы реализации и ручные проверки](2026-11-25-task-4-wallet.md).
 
 **Файлы:** `services/wallet/internal/domain/wallet.go`, `services/wallet/internal/app/operations.go`, `services/wallet/internal/httpapi/wallet.go`, `services/wallet/internal/rpc/reserves.go`, `services/wallet/migrations/001_wallet.sql`, `services/wallet/queries/wallet.sql`, `services/wallet/integration/wallet_test.go`.
 
