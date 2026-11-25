@@ -37,3 +37,17 @@ grpcurl -plaintext -import-path contracts/proto -proto wallet/v1/wallet.proto \
 ```
 
 Ожидается `RESERVED`. Повтор вызова сохраняет результат, а баланс в Swagger равен `available: "7.00"`, `reserved: "3.00"`. Повтор с `amountMinor: "400"` возвращает `PARAMETER_CONFLICT`. Сохраните стенд и резерв для следующего этапа. gRPC доступен на `127.0.0.1:9093` только в профиле `wallet-check`.
+
+## Проверка списания резерва
+
+Пересоберите сохранённый стенд: `docker compose -p wallet-manual --profile wallet-check up --build -d`. Не удаляйте том: для проверки нужен резерв `manual-bet-1` предыдущего этапа. Из корня репозитория выполните:
+
+```sh
+docker run --rm --network container:wallet-manual-wallet-1 \
+  -v "$PWD/contracts/proto:/protos:ro" fullstorydev/grpcurl:latest \
+  -plaintext -import-path /protos -proto wallet/v1/wallet.proto \
+  -d '{"betId":"manual-bet-1","playerId":"player-1"}' \
+  localhost:9093 wallet.v1.WalletService/Capture
+```
+
+Ответ — `CAPTURED`. Повторите вызов: ответ не изменится. В Swagger проверьте `GET /api/v1/wallet`: `available: "7.00"`, `reserved: "0.00"`. Для отсутствующего или отклонённого резерва Capture возвращает gRPC `NotFound`; неверный идентификатор — `InvalidArgument`.

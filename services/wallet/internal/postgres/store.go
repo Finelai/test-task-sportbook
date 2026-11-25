@@ -141,11 +141,71 @@ func (s *Store) Reserve(ctx context.Context, bet, player string, amount int64) (
 		result = app.Reserved
 		stored = "reserved"
 	}
-	if _, err = tx.Exec(ctx, `INSERT INTO wallet_reserves(bet_id,player_id,amount,result) VALUES ($1,$2,$3,$4)`, bet, player, amount, stored); err != nil {
+	if _, err = tx.Exec(ctx, `INSERT INTO wallet_reserves(bet_id,player_id,amount,result,state) VALUES ($1,$2,$3,$4,CASE WHEN $4='reserved' THEN 'reserved' ELSE NULL END)`, bet, player, amount, stored); err != nil {
 		return 0, err
 	}
 	if err = tx.Commit(ctx); err != nil {
 		return 0, err
 	}
 	return result, nil
+}
+
+// Capture locks the bet, then the wallet, then the reserve row. Release must use the same order.
+func (s *Store) Capture(ctx context.Context, bet, player string) (app.CaptureResult, error) {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, bet); err != nil {
+		return 0, err
+	}
+	var owner, result string
+	err = tx.QueryRow(ctx, `SELECT player_id,result FROM wallet_reserves WHERE bet_id=$1`, bet).Scan(&owner, &result)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, app.ErrReserveNotFound
+	}
+	if err != nil {
+		return 0, err
+	}
+	if owner != player {
+		return app.CaptureParameterConflict, nil
+	}
+	if result != "reserved" {
+		return 0, app.ErrReserveNotFound
+	}
+	var reserved int64
+	if err = tx.QueryRow(ctx, `SELECT reserved FROM wallets WHERE player_id=$1 FOR UPDATE`, owner).Scan(&reserved); err != nil {
+		return 0, err
+	}
+	var amount int64
+	var state string
+	if err = tx.QueryRow(ctx, `SELECT amount,state FROM wallet_reserves WHERE bet_id=$1 FOR UPDATE`, bet).Scan(&amount, &state); err != nil {
+		return 0, err
+	}
+	switch state {
+	case "captured":
+		return app.Captured, nil
+	case "released":
+		return app.AlreadyReleased, nil
+	case "reserved":
+	default:
+		return 0, errors.New("invalid reserve state")
+	}
+	if reserved < amount {
+		return 0, errors.New("invalid reserved balance")
+	}
+	if _, err = tx.Exec(ctx, `UPDATE wallets SET reserved=reserved-$2 WHERE player_id=$1`, owner, amount); err != nil {
+		return 0, err
+	}
+	if _, err = tx.Exec(ctx, `UPDATE wallet_reserves SET state='captured' WHERE bet_id=$1`, bet); err != nil {
+		return 0, err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO wallet_journal(player_id,operation,amount) VALUES ($1,'capture',$2)`, owner, amount); err != nil {
+		return 0, err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+	return app.Captured, nil
 }
