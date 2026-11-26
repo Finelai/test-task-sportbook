@@ -21,7 +21,7 @@ services:
       retries: 12
 
   contract-check:
-    profiles: [contract-check, line-check, wallet-check]
+    profiles: [contract-check, line-check, wallet-check, bets-check]
     build:
       context: .
       dockerfile: tools/contract-check/Dockerfile
@@ -35,7 +35,7 @@ services:
       - "9091:9091"
 
   swagger-ui:
-    profiles: [contract-check, line-check, wallet-check]
+    profiles: [contract-check, line-check, wallet-check, bets-check]
     image: swaggerapi/swagger-ui:v5.30.3
     environment:
       SWAGGER_JSON_URL: /docs/openapi.yaml
@@ -116,6 +116,76 @@ services:
       line:
         condition: service_healthy
       wallet:
+        condition: service_healthy
+      contract-check:
+        condition: service_started
+      swagger-ui:
+        condition: service_started
+
+  line-bets:
+    profiles: [bets-check]
+    build:
+      context: .
+      dockerfile: services/line/Dockerfile
+    environment:
+      DATABASE_URL: postgres://line:${LINE_DB_PASSWORD:-line}@postgres:5432/line?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  wallet-bets:
+    profiles: [bets-check]
+    build:
+      context: .
+      dockerfile: services/wallet/Dockerfile
+    environment:
+      DATABASE_URL: postgres://wallet:${WALLET_DB_PASSWORD:-wallet}@postgres:5432/wallet?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8082/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  bets:
+    profiles: [bets-check]
+    build:
+      context: .
+      dockerfile: services/bets/Dockerfile
+    environment:
+      DATABASE_URL: postgres://bets:${BETS_DB_PASSWORD:-bets}@postgres:5432/bets?sslmode=disable
+      LINE_GRPC_ADDR: line-bets:9092
+      WALLET_GRPC_ADDR: wallet-bets:9093
+    depends_on:
+      postgres:
+        condition: service_healthy
+      line-bets:
+        condition: service_healthy
+      wallet-bets:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8083/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  nginx-bets:
+    profiles: [bets-check]
+    build:
+      context: ./infra/nginx-bets
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./contracts/openapi:/etc/nginx/contracts:ro
+    depends_on:
+      bets:
         condition: service_healthy
       contract-check:
         condition: service_started

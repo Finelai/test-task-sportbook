@@ -34,7 +34,8 @@ jobs:
       - run: docker compose config -q
       - run: make lint
       - run: make generate
-      - run: git diff --exit-code -- apps/web/src/shared/api/generated/ contracts/generated/
+      - run: git diff --exit-code -- apps/web/src/shared/api/generated/ contracts/generated/ services/bets/internal/postgres/db/
+      - run: test -z "$(git status --porcelain -- apps/web/src/shared/api/generated/ contracts/generated/ services/bets/internal/postgres/db/)"
       - run: docker compose --profile contract-check config -q
       - run: make test
       - run: make test-integration

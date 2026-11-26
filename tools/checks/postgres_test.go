@@ -31,7 +31,11 @@ func TestPostgresDatabaseIsolation(t *testing.T) {
 			HostFilePath: script, ContainerFilePath: "/docker-entrypoint-initdb.d/10-sportsbook.sh", FileMode: 0o755,
 		}),
 		testcontainers.WithExposedPorts("5432/tcp"),
-		testcontainers.WithWaitStrategy(wait.ForListeningPort("5432/tcp")),
+		// The first ready message belongs to the temporary initialization server.
+		testcontainers.WithWaitStrategy(wait.ForAll(
+			wait.ForLog("database system is ready to accept connections").WithOccurrence(2),
+			wait.ForListeningPort("5432/tcp"),
+		).WithDeadline(2*time.Minute)),
 	)
 	testcontainers.CleanupContainer(t, container)
 	if err != nil {
